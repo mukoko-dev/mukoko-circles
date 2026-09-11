@@ -54,11 +54,11 @@ Two things a contributor should know before starting work here:
 
 ## Ecosystem
 
-| Repo / service                                                        | What it is                                             |
-| --------------------------------------------------------------------- | ------------------------------------------------------ |
-| [`mukoko-dev/mukoko`](https://github.com/mukoko-dev/mukoko)           | The super app — shell, mini-apps, services             |
-| [`mukoko-dev/mukoko-auth`](https://github.com/mukoko-dev/mukoko-auth) | Mukoko ID, the identity every surface signs in with    |
-| [mukoko.com/surfaces](https://mukoko.com/surfaces)                    | The public list of Mukoko surfaces, Circles among them |
+| Repo / service                                              | What it is                                             |
+| ----------------------------------------------------------- | ------------------------------------------------------ |
+| [`mukoko-dev/mukoko`](https://github.com/mukoko-dev/mukoko) | The super app — shell, mini-apps, services             |
+| [Mukoko ID](https://id.mukoko.com)                          | The identity every Mukoko surface signs in with        |
+| [mukoko.com/surfaces](https://mukoko.com/surfaces)          | The public list of Mukoko surfaces, Circles among them |
 
 ## Licence
 

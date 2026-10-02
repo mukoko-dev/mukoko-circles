@@ -2,7 +2,6 @@
 
 > Interest groups, fan communities and professional networks — the persistent social fabric of [Mukoko](https://mukoko.com).
 
-[![Lint](https://github.com/mukoko-dev/mukoko-circles/actions/workflows/lint.yml/badge.svg)](https://github.com/mukoko-dev/mukoko-circles/actions/workflows/lint.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Status](https://img.shields.io/badge/status-not%20yet%20implemented-lightgrey?style=flat-square)
 

@@ -1,0 +1,30 @@
+---
+import Mark from "./Mark.astro";
+---
+
+<header class="border-b border-border bg-background">
+  <div
+    class="container-custom flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4"
+  >
+    <a
+      href="/"
+      class="inline-flex items-center gap-2 text-foreground no-underline"
+      aria-label="mukoko circles, home"
+    >
+      <Mark class="text-primary" />
+      <span class="font-serif text-h5 font-bold tracking-tight"
+        >mukoko <span class="text-primary">circles</span></span
+      >
+    </a>
+    <nav aria-label="Main" class="order-3 w-full sm:order-none sm:w-auto">
+      <ul class="flex flex-wrap items-center gap-x-6 gap-y-2 text-body-sm">
+        <li><a class="link" href="/circles">All circles</a></li>
+        <li><a class="link" href="/fediverse">Fediverse</a></li>
+        <li><a class="link" href="/about">About</a></li>
+      </ul>
+    </nav>
+    <a class="btn-primary h-10 px-5 text-body-sm" href="/create"
+      >Create a circle</a
+    >
+  </div>
+</header>

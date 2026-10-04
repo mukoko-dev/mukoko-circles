@@ -1,0 +1,82 @@
+---
+import Shell from "../layouts/Shell.astro";
+import Section from "@bundu/ui/Section.astro";
+---
+
+<Shell
+  title="Circles on the fediverse · Mukoko Circles"
+  description="Every open Mukoko circle has a fediverse address. Look circles up from Mastodon and other ActivityPub apps."
+  canonical="https://circles.mukoko.com/fediverse"
+>
+  <section class="gradient-showcase border-b border-border">
+    <div class="container-narrow py-16 md:py-20">
+      <p class="eyebrow">Fediverse</p>
+      <h1 class="font-serif text-h1 text-balance">Every open circle has an address</h1>
+      <p class="mt-4 text-body-lg text-muted-foreground">
+        The fediverse is the network of independent social apps that talk to
+        each other over ActivityPub: Mastodon, Pixelfed, Lemmy and many more.
+        Mukoko circles are part of it.
+      </p>
+    </div>
+  </section>
+
+  <Section>
+    <div class="container-prose space-y-10 px-0">
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">The address</h2>
+        <p>
+          A circle's address is its name, then <span class="handle"
+            >@circles.mukoko.com</span
+          >. The Harare Runners circle, for example, would be:
+        </p>
+        <p class="card p-4 handle">@harare-runners@circles.mukoko.com</p>
+        <p>
+          Paste an address into the search box of your fediverse app to see the
+          circle, its description and its public posts.
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">What works today</h2>
+        <ul class="list-disc space-y-2 pl-6">
+          <li>Looking a circle up by its address (WebFinger).</li>
+          <li>
+            Seeing the circle as a group, with its name, description and picture
+            (an ActivityPub <code>Group</code> actor at
+            <span class="handle">https://circles.mukoko.com/c/&lbrace;name&rbrace;</span>).
+          </li>
+          <li>
+            Reading the posts its moderators have approved for the public (the
+            outbox).
+          </li>
+        </ul>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">What comes next</h2>
+        <p>
+          Following a circle from another server, and seeing its new posts in
+          your timeline, needs signed deliveries between servers. That is the
+          next phase. Until then, a circle's inbox says so plainly rather than
+          pretending to accept a follow, and the way to join is the Mukoko app.
+        </p>
+        <p>
+          The plan is tracked in the open, in
+          <a class="link" href="https://github.com/mukoko-dev/mukoko-circles/issues/8"
+            >mukoko-dev/mukoko-circles#8</a
+          >.
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">For server admins</h2>
+        <p>
+          NodeInfo is at <a class="link" href="/.well-known/nodeinfo"
+            >/.well-known/nodeinfo</a
+          >. Private and secret circles are never federated, and posts are
+          attributed to the circle, never to the person who wrote them.
+        </p>
+      </div>
+    </div>
+  </Section>
+</Shell>

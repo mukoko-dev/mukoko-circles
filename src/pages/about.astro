@@ -1,0 +1,99 @@
+---
+import Shell from "../layouts/Shell.astro";
+import Section from "@bundu/ui/Section.astro";
+
+const ld = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  url: "https://circles.mukoko.com/about",
+  name: "About Mukoko Circles",
+  isPartOf: { "@id": "https://circles.mukoko.com/#website" },
+}).replace(/</g, "\\u003c");
+---
+
+<Shell
+  title="About Mukoko Circles"
+  description="What Circles are, how they work in the Mukoko super-app, and what this site shows and never shows."
+  canonical="https://circles.mukoko.com/about"
+  headExtra={`<script type="application/ld+json">${ld}</script>`}
+>
+  <section class="gradient-showcase border-b border-border">
+    <div class="container-narrow py-16 md:py-20">
+      <p class="eyebrow">About</p>
+      <h1 class="font-serif text-h1 text-balance">What are Mukoko Circles?</h1>
+      <p class="mt-4 text-body-lg text-muted-foreground">
+        Circles are the communities of mukoko, Africa's privacy-first social
+        super-app. A running club in Harare, a book club in Nairobi, a network
+        of Lagos designers: each is a circle, with its own members, posts,
+        events and chat.
+      </p>
+    </div>
+  </section>
+
+  <Section>
+    <div class="container-prose space-y-10 px-0">
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">Circles live in the Mukoko app</h2>
+        <p>
+          There is no separate Circles app. You create, join and take part in
+          circles inside the Mukoko super-app, alongside your events, messages
+          and news. For now, circles sit inside Mukoko Events, where they lead
+          with their gatherings and calendars.
+        </p>
+        <p>
+          This site, circles.mukoko.com, is the front door: it lists the circles
+          anyone can join, and gives every one of them a page you can share.
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">Four kinds of circle</h2>
+        <ul class="space-y-2">
+          <li>
+            <strong>Public:</strong> anyone can join and take part. Listed here.
+          </li>
+          <li>
+            <strong>Broadcast:</strong> the hosts post, and everyone can follow
+            along. Listed here.
+          </li>
+          <li>
+            <strong>Private:</strong> people ask to join and the hosts approve.
+            Never listed here.
+          </li>
+          <li>
+            <strong>Secret:</strong> invitation only, and invisible to everyone
+            else. Never listed here.
+          </li>
+        </ul>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">What this site shows, and what it never does</h2>
+        <p>
+          A circle's page shows its name, description, size and categories, and
+          the posts its moderators have approved for the public. It never shows
+          who the members are, and posts are shown as the circle's, not as any
+          one person's.
+        </p>
+        <p>
+          Everything here comes from Mukoko's public directory. This site keeps
+          no database of its own and sets no tracking cookies.
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="font-serif text-h3">Ubuntu, in practice</h2>
+        <p>
+          <em>Umuntu ngumuntu ngabantu</em>: a person is a person through other
+          people. Circles exist so your people can find you, and so your
+          community belongs to you, not to an algorithm.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <a class="btn-primary" href="/create">Create a circle</a>
+        <a class="btn-outline" href="/circles">Browse circles</a>
+      </div>
+    </div>
+  </Section>
+</Shell>

@@ -1,0 +1,40 @@
+{
+  "name": "mukoko-circles",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "circles.mukoko.com: the public discovery page and ActivityPub identity for Mukoko Circles.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run build && wrangler dev --env dev",
+    "build": "npm run build:site && npm run build:worker",
+    "build:site": "astro build",
+    "build:worker": "bash scripts/build-worker.sh",
+    "test": "npm run test:rust && npm run build && vp test run",
+    "test:rust": "cargo test --manifest-path worker/Cargo.toml",
+    "shots": "node scripts/shots.mjs",
+    "check": "astro check && vp check",
+    "lint": "vp lint",
+    "fmt": "vp fmt",
+    "ci:prepare": "astro sync",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "packageManager": "npm@11.12.1",
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@fontsource/noto-sans": "^5.3.0",
+    "@fontsource/noto-serif": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.4",
+    "astro": "^7.3.5",
+    "axe-core": "^4.13.0",
+    "playwright": "^1.63.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite-plus": "^1.0.0",
+    "wrangler": "^4.147.0"
+  },
+  "dependencies": {
+    "@bundu/ui": "^0.2.0"
+  }
+}

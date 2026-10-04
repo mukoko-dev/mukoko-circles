@@ -1,0 +1,58 @@
+---
+/** The shell for every list: all circles, a category, search results. */
+import Shell from "../../layouts/Shell.astro";
+import Section from "@bundu/ui/Section.astro";
+import SearchForm from "../../components/SearchForm.astro";
+---
+
+<Shell
+  title="{{title}}"
+  description="{{description}}"
+  canonical="{{canonical}}"
+  ogImage="{{og_image}}"
+  ogType="{{og_type}}"
+  robots="{{robots}}"
+  headExtra="{{{head_extra}}}"
+  storeLinks="{{{store_links}}}"
+>
+  <section class="gradient-showcase border-b border-border">
+    <div class="container-custom py-12 md:py-16">
+      <nav aria-label="Breadcrumb" class="mb-4 text-body-sm">
+        <a class="link" href="/">Circles</a>
+      </nav>
+      <p class="eyebrow">{"{{eyebrow}}"}</p>
+      <h1 class="font-serif text-h1 text-balance">{"{{heading}}"}</h1>
+      <p class="mt-4 max-w-2xl text-body-lg text-muted-foreground">{"{{lead}}"}</p>
+      <div class="mt-8">
+        <SearchForm id="list-search" value="{{q}}" />
+      </div>
+    </div>
+  </section>
+
+  <Section space="tight">
+    <div data-state="{{results_state}}">
+      <p class="text-body-sm text-muted-foreground" role="status">{"{{results}}"}</p>
+      <ul class="when-ok mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Fragment set:html="{{{cards}}}" />
+      </ul>
+      <div class="when-empty card mt-6 p-8 text-center">
+        <p class="font-serif text-h4">No circles here yet.</p>
+        <p class="mt-2 text-muted-foreground">
+          Try another search, or start the circle you were looking for.
+        </p>
+        <div class="mt-6 flex flex-wrap justify-center gap-3">
+          <a class="btn-primary" href="/create">Create a circle</a>
+          <a class="btn-outline" href="/circles">All circles</a>
+        </div>
+      </div>
+      <div class="mt-8 empty-hide"><Fragment set:html="{{{next}}}" /></div>
+    </div>
+  </Section>
+
+  <Section bg="secondary" space="tight">
+    <h2 class="font-serif text-h3">Browse by category</h2>
+    <ul class="mt-6 flex flex-wrap gap-3">
+      <Fragment set:html="{{{categories}}}" />
+    </ul>
+  </Section>
+</Shell>

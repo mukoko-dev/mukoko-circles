@@ -1,0 +1,23 @@
+---
+import Shell from "../layouts/Shell.astro";
+---
+
+<Shell
+  title="Page not found · Mukoko Circles"
+  description="That page doesn't exist on circles.mukoko.com."
+  canonical="https://circles.mukoko.com/404"
+  robots="noindex, follow"
+>
+  <section class="container-narrow py-20 md:py-28">
+    <p class="eyebrow">404</p>
+    <h1 class="font-serif text-h1 text-balance">That page isn't here</h1>
+    <p class="mt-4 text-body-lg text-muted-foreground">
+      The link may be old, or the circle may have moved. Open circles are all
+      listed on the home page.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a class="btn-primary" href="/">Go to the home page</a>
+      <a class="btn-outline" href="/circles">All circles</a>
+    </div>
+  </section>
+</Shell>

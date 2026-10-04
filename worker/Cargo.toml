@@ -1,0 +1,29 @@
+[package]
+name = "mukoko-circles-worker"
+version = "0.1.0"
+description = "circles.mukoko.com: the discovery pages and the ActivityPub identity for Mukoko Circles, on workers-rs."
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/mukoko-dev/mukoko-circles"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+url = "2"
+# The nyuchi-tools image pipeline (resvg, embedded Noto faces), pinned to a
+# commit. It renders each circle's Open Graph card: one renderer for the
+# estate rather than a second copy here.
+nyuchi-imaging = { git = "https://github.com/nyuchi/workspace-tools", rev = "4812a2c582b138be542e163fa74629404cf69f81" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+worker = "0.8"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1

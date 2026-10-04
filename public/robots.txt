@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /search
+Disallow: /tpl/
+
+Sitemap: https://circles.mukoko.com/sitemap.xml

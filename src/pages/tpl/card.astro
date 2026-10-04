@@ -1,0 +1,25 @@
+---
+/**
+ * One circle in a grid. A fragment: the Worker repeats it per circle and
+ * reads only what is between the fragment markers.
+ */
+---
+
+<Fragment set:html="<!--fragment-->" />
+<li class="card-hover relative flex flex-col gap-3 p-5">
+  <div class="flex items-start gap-3">
+    <span class="avatar size-12 text-h5" aria-hidden="true">{"{{initial}}"}</span>
+    <div class="min-w-0 flex-1">
+      <h3 class="font-sans text-h5 font-semibold leading-snug">
+        <a class="stretched text-foreground no-underline hover:underline" href="{{href}}"
+          >{"{{name}}"}</a
+        >
+      </h3>
+      <p class="text-caption text-muted-foreground">{"{{members}}"}</p>
+    </div>
+    <span class="{{type_class}}">{"{{type_label}}"}</span>
+  </div>
+  <p class="text-body-sm text-muted-foreground">{"{{summary}}"}</p>
+  <p class="mt-auto text-caption text-muted-foreground empty-hide">{"{{categories}}"}</p>
+</li>
+<Fragment set:html="<!--/fragment-->" />

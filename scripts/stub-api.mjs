@@ -5,8 +5,8 @@
 // Two deliberate faults let the tests prove the Worker's own guards:
 // - `GET /v1/circles/discover/family-chat` (private) and `/surprise-party`
 //   (secret) are served as if the API leaked them. The Worker must 404.
-// - Only harare-runners has a posts endpoint; every other circle's posts
-//   404, as they will until the API ships public posts.
+// Every circle has a posts endpoint, as in the API: a circle with no public
+// posts returns an empty page. Only harare-runners has posts in the fixtures.
 //
 //   node scripts/stub-api.mjs [port]     (default 8788)
 import { createServer } from "node:http";
@@ -62,11 +62,13 @@ export function handler(req, res) {
     return send(res, 200, page(items, url));
   }
   if (rest.length === 1 && rest[0] === "categories") {
-    return send(res, 200, {
-      data: data.categories,
-      nextCursor: null,
-      total: data.categories.length,
-    });
+    // As the API: only categories with a circle, most circles first.
+    const cats = data.categories
+      .filter((c) => c.circleCount > 0)
+      .sort(
+        (a, b) => b.circleCount - a.circleCount || a.name.localeCompare(b.name),
+      );
+    return send(res, 200, { data: cats, nextCursor: null, total: cats.length });
   }
   const slug = rest[0];
   const circle =
@@ -75,8 +77,7 @@ export function handler(req, res) {
   if (!circle) return send(res, 404, { detail: "Circle not found" });
   if (rest.length === 1) return send(res, 200, circle);
   if (rest[1] === "posts") {
-    const posts = data.posts[slug];
-    if (!posts) return send(res, 404, { detail: "Not Found" });
+    const posts = data.posts[slug] ?? [];
     if (rest.length === 2) return send(res, 200, page(posts, url));
     const post = posts.find((p) => p.id === rest[2]);
     return post

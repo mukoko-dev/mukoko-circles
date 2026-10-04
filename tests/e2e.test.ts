@@ -106,6 +106,40 @@ describe("pages", () => {
     expect(html).not.toMatch(/<script(?![^>]*application\/ld\+json)/);
   });
 
+  it("is built from the Mzizi Discover Standard, with no inline styles", async () => {
+    const r = await get("/");
+    // No style attributes anywhere, so the CSP allows none.
+    expect(r.headers.get("content-security-policy")).not.toContain(
+      "unsafe-inline",
+    );
+    for (const path of [
+      "/",
+      "/circles",
+      "/categories/tech",
+      "/search?q=runs",
+      "/c/harare-runners",
+      "/about",
+      "/fediverse",
+    ]) {
+      const html = await (await get(path)).text();
+      expect(html, path).not.toMatch(/\sstyle=/);
+      expect(html, path).toContain('data-slot="discover-shell"');
+      expect(html, path).toContain('data-slot="discover-meta"');
+    }
+    const home = await (await get("/")).text();
+    for (const slot of [
+      "discover-hero",
+      "discover-search",
+      "discover-section",
+      "result-grid",
+      "discover-card",
+      "category-chips",
+      "category-chip",
+    ])
+      expect(home, slot).toContain(`data-slot="${slot}"`);
+    expect(home).toMatch(/data-variant="circle"/);
+  });
+
   it("escapes what the API sends", async () => {
     const html = await (await get("/c/kwaito-forever")).text();
     expect(html).toContain("Kwaito Forever &lt;3 &amp; &quot;friends&quot;");
@@ -118,9 +152,7 @@ describe("pages", () => {
     expect(r.status).toBe(200);
     const html = await r.text();
     noPlaceholders(html);
-    expect(html).toContain(
-      '<h1 class="font-serif text-h1 text-balance">Technology</h1>',
-    );
+    expect(html).toMatch(/<h1 [^>]*>Technology<\/h1>/);
     expect(html).toContain("Nairobi JS");
     expect(html).not.toContain("Harare Runners");
     expect((await get("/categories/no-such-thing")).status).toBe(404);
@@ -139,7 +171,8 @@ describe("pages", () => {
   it("all circles paginates with a cursor", async () => {
     const html = await (await get("/circles")).text();
     expect(html).toContain("9 circles");
-    expect(html).not.toContain('rel="next"');
+    // Everything fits on one page: the Mzizi LoadMore is at its end.
+    expect(html).toMatch(/data-slot="load-more" data-state="end"/);
   });
 
   it("a circle page has OG tags, the actor link and public posts", async () => {

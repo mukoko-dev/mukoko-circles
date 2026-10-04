@@ -209,6 +209,12 @@ fn type_label(c: &Circle) -> (&'static str, &'static str, &'static str) {
     }
 }
 
+/// The Mzizi DiscoverCard badge tone for a circle's type: Public in the
+/// brand colour, Broadcast as information.
+fn type_tone(c: &Circle) -> &'static str {
+    if c.is_broadcast() { "info" } else { "brand" }
+}
+
 fn initial(name: &str) -> String {
     name.chars()
         .find(|c| c.is_alphanumeric())
@@ -217,7 +223,7 @@ fn initial(name: &str) -> String {
 }
 
 pub fn card(t: &Templates, cfg: &Config, c: &Circle) -> String {
-    let (label, class, _) = type_label(c);
+    let (label, _, _) = type_label(c);
     let cats = c
         .categories
         .iter()
@@ -232,7 +238,7 @@ pub fn card(t: &Templates, cfg: &Config, c: &Circle) -> String {
             .text("summary", truncate(&c.summary(), 140))
             .text("members", count(c.member_count, "member", "members"))
             .text("type_label", label)
-            .text("type_class", class)
+            .text("type_tone", type_tone(c))
             .text("initial", initial(&c.name))
             .text("categories", cats)
             .text("handle", format!("@{}@{}", c.username(), cfg.host)),
@@ -353,19 +359,18 @@ pub struct ListPage<'a> {
 }
 
 pub fn list(t: &Templates, cfg: &Config, p: ListPage) -> String {
-    let next = p
+    // The next page for the Mzizi LoadMore in the shell: its URL, and
+    // "more" or "end". The shell escapes the URL; nothing here writes HTML.
+    let next_href = p
         .page
         .next_cursor
         .as_deref()
         .map(|cur| {
             let sep = if p.next_base.contains('?') { '&' } else { '?' };
-            format!(
-                r#"<a class="btn-outline" rel="next" href="{}{sep}cursor={}">More circles</a>"#,
-                escape(&p.next_base),
-                escape(&encode(cur))
-            )
+            format!("{}{sep}cursor={}", p.next_base, encode(cur))
         })
         .unwrap_or_default();
+    let more_state = if next_href.is_empty() { "end" } else { "more" };
     let shown = p.page.data.len() as u64;
     let results = match p.page.total {
         Some(n) => count(n, "circle", "circles"),
@@ -417,7 +422,8 @@ pub fn list(t: &Templates, cfg: &Config, p: ListPage) -> String {
         },
     )
     .html("cards", cards(t, cfg, &p.page.data))
-    .html("next", next)
+    .text("next_href", next_href)
+    .text("more_state", more_state)
     .html("categories", chips(t, p.categories));
     fill(&t.list, &vars)
 }

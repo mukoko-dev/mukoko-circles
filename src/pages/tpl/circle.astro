@@ -6,6 +6,7 @@
  */
 import Shell from "../../layouts/Shell.astro";
 import Section from "@bundu/ui/Section.astro";
+import OpenInApp from "@bundu/ui/discover/OpenInApp.astro";
 ---
 
 <Shell
@@ -27,13 +28,16 @@ import Section from "@bundu/ui/Section.astro";
         </ol>
       </nav>
       <div class="flex flex-col gap-6 md:flex-row md:items-start">
-        <span class="avatar size-20 text-h2" aria-hidden="true">{"{{initial}}"}</span>
+        <span
+          class="inline-flex size-20 shrink-0 items-center justify-center rounded-full bg-primary/15 font-serif text-h2 font-bold text-foreground"
+          aria-hidden="true">{"{{initial}}"}</span>
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2">
             <span class="{{type_class}}">{"{{type_label}}"}</span>
             <span class="badge bg-muted text-foreground">{"{{language}}"}</span>
-            <span data-state="{{place_state}}"
-              ><span class="when-ok badge bg-muted text-foreground"
+            <span data-state="{{place_state}}" class="group/place"
+              ><span
+                class="badge bg-muted text-foreground group-data-[state=empty]/place:hidden"
                 >{"{{place}}"}</span
               ></span
             >
@@ -45,16 +49,17 @@ import Section from "@bundu/ui/Section.astro";
           <dl class="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-body-sm">
             <div><dt class="sr-only">Members</dt><dd class="font-semibold">{"{{members}}"}</dd></div>
             <div><dt class="sr-only">Posts</dt><dd>{"{{posts}}"}</dd></div>
-            <div class="empty-hide"><dt class="sr-only">Started</dt><dd class="empty-hide">{"{{since}}"}</dd></div>
+            <div class="empty:hidden"><dt class="sr-only">Started</dt><dd class="empty:hidden">{"{{since}}"}</dd></div>
           </dl>
-          <div class="mt-8 flex flex-wrap items-center gap-3">
-            <a class="btn-primary" href="{{join_href}}">{"{{join_label}}"}</a>
-            <a class="btn-outline" href="/create">Start your own circle</a>
+          <div class="mt-8">
+            <OpenInApp
+              href="{{join_href}}"
+              label="{{join_label}}"
+              hint="{{type_hint}} Opens in the Mukoko app, or on the web if you don't have it."
+            >
+              <a class="btn-outline" href="/create">Start your own circle</a>
+            </OpenInApp>
           </div>
-          <p class="mt-3 text-body-sm text-muted-foreground">
-            {"{{type_hint}}"} Opens in the Mukoko app, or on the web if you don't
-            have it.
-          </p>
         </div>
       </div>
     </div>
@@ -62,12 +67,12 @@ import Section from "@bundu/ui/Section.astro";
 
   <Section space="tight">
     <div class="grid gap-8 lg:grid-cols-3">
-      <div class="lg:col-span-2" data-state="{{posts_state}}">
+      <div class="group/posts lg:col-span-2" data-state="{{posts_state}}">
         <h2 class="font-serif text-h3">Recent public posts</h2>
-        <ul class="when-ok mt-6 space-y-4">
+        <ul class="mt-6 space-y-4 group-data-[state=empty]/posts:hidden">
           <Fragment set:html="{{{posts}}}" />
         </ul>
-        <div class="when-empty card mt-6 p-6">
+        <div class="card mt-6 hidden p-6 group-data-[state=empty]/posts:block">
           <p class="text-muted-foreground">
             Conversations in this circle happen in the Mukoko app. Join to see
             them and take part.
@@ -77,7 +82,7 @@ import Section from "@bundu/ui/Section.astro";
       <aside class="space-y-6" aria-label="About this circle">
         <div class="card p-6">
           <h2 class="font-sans text-h5 font-semibold">On the fediverse</h2>
-          <p class="mt-3 handle">{"{{handle}}"}</p>
+          <p class="mt-3 font-mono text-body-sm break-all">{"{{handle}}"}</p>
           <p class="mt-3 text-body-sm text-muted-foreground">
             Search for this address in Mastodon or any ActivityPub app to see the
             circle and its public posts. Following from other servers is coming
@@ -85,12 +90,12 @@ import Section from "@bundu/ui/Section.astro";
             <a class="link" href="/fediverse">Learn more</a>
           </p>
         </div>
-        <div class="card p-6" data-state="{{categories_state}}">
+        <div class="group/cats card p-6" data-state="{{categories_state}}">
           <h2 class="font-sans text-h5 font-semibold">Categories</h2>
-          <ul class="when-ok mt-4 flex flex-wrap gap-2">
+          <ul class="mt-4 flex flex-wrap gap-2 group-data-[state=empty]/cats:hidden">
             <Fragment set:html="{{{categories}}}" />
           </ul>
-          <p class="when-empty mt-3 text-body-sm text-muted-foreground">
+          <p class="mt-3 hidden text-body-sm text-muted-foreground group-data-[state=empty]/cats:block">
             Not in a category yet.{" "}
             <a class="link" href="/circles">See all circles</a>
           </p>

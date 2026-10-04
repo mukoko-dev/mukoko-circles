@@ -1,11 +1,8 @@
 ---
-/** One category link. A fragment, like card.astro. */
+/** One category link: the Mzizi CategoryChip. A fragment, like card.astro. */
+import CategoryChip from "@bundu/ui/discover/CategoryChip.astro";
 ---
 
 <Fragment set:html="<!--fragment-->" />
-<li>
-  <a class="chip" href="{{href}}"
-    >{"{{name}}"}<span class="chip-count">{"{{count}}"}</span></a
-  >
-</li>
+<CategoryChip href="{{href}}" label="{{name}}" count="{{count}}" />
 <Fragment set:html="<!--/fragment-->" />

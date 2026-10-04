@@ -15,7 +15,7 @@ use serde::de::DeserializeOwned;
 use std::cell::RefCell;
 use worker::*;
 
-const CSP: &str = "default-src 'self'; img-src 'self' https: data:; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
+const CSP: &str = "default-src 'self'; img-src 'self' https: data:; style-src 'self'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
 
 thread_local! {
     /// The shells, read once per isolate. They only change with a deploy,

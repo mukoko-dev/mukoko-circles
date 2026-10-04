@@ -1,0 +1,25 @@
+---
+/** Errors and notices: 404, 503. */
+import Shell from "../../layouts/Shell.astro";
+---
+
+<Shell
+  title="{{title}}"
+  description="{{description}}"
+  canonical="{{canonical}}"
+  ogImage="{{og_image}}"
+  ogType="{{og_type}}"
+  robots="{{robots}}"
+  headExtra="{{{head_extra}}}"
+  storeLinks="{{{store_links}}}"
+>
+  <section class="container-narrow py-20 md:py-28">
+    <p class="eyebrow">{"{{eyebrow}}"}</p>
+    <h1 class="font-serif text-h1 text-balance">{"{{heading}}"}</h1>
+    <p class="mt-4 text-body-lg text-muted-foreground">{"{{message}}"}</p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a class="btn-primary" href="/">Go to the home page</a>
+      <a class="btn-outline" href="/circles">All circles</a>
+    </div>
+  </section>
+</Shell>

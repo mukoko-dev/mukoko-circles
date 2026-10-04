@@ -1,0 +1,68 @@
+// circles.mukoko.com: one Worker. Rust (workers-rs, worker/) answers every
+// request first and serves the Astro build (dist/) as static assets.
+//
+// Configuration is vars, set here or by the owner script; the API client
+// pair is secrets, never in this file:
+//   vars:    SITE_URL, NYUCHI_API_URL, JOIN_URL_TEMPLATE, CREATE_URL,
+//            APP_WEB_URL, APP_STORE_URL, PLAY_STORE_URL
+//   secrets: NYUCHI_API_CLIENT_ID, NYUCHI_API_CLIENT_SECRET (optional: the
+//            discovery endpoint is public; the pair identifies this caller)
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mukoko-circles",
+  "main": "worker/build/index.js",
+  // Nyuchi Web Services. Pinned so a token that sees several accounts can
+  // still deploy non-interactively. An account id is not a credential.
+  "account_id": "125a2dfbc21f76a25c980609609e8218",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "preview_urls": true,
+  "keep_vars": true,
+  "upload_source_maps": true,
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+
+  // No "build" block: `npm run build` (the Astro site, then worker-build
+  // compiling the crate to wasm in worker/build/) is the Workers Builds build
+  // command, and `npm run deploy` runs it before `wrangler deploy`. Keeping it
+  // out of this file stops `wrangler dev` rebuilding on every start.
+
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // The Worker routes everything: the dynamic pages, the ActivityPub and
+    // WebFinger endpoints, and the security headers on static pages.
+    "run_worker_first": true,
+  },
+
+  "vars": {
+    "SITE_URL": "https://circles.mukoko.com",
+    "NYUCHI_API_URL": "https://api.nyuchi.com",
+    // Circles lives inside Mukoko Events until the super app ships. When the
+    // API sends `links.join` per circle, that wins over this template.
+    "JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
+    "CREATE_URL": "https://events.mukoko.com/circles?create=1",
+    "APP_WEB_URL": "https://events.mukoko.com",
+  },
+
+  // A custom domain takes a BARE HOSTNAME, never "circles.mukoko.com/*":
+  // wildcards are rejected for custom domains, and Workers Builds previews
+  // do not apply routes, so a bad pattern only fails on the production
+  // deploy (mzizi-site's wrangler.jsonc has the history).
+  "routes": [{ "pattern": "circles.mukoko.com", "custom_domain": true }],
+
+  // Local development and the end-to-end tests: the stub API on :8788.
+  "env": {
+    "dev": {
+      "name": "mukoko-circles-dev",
+      "routes": [],
+      "vars": {
+        "SITE_URL": "https://circles.mukoko.com",
+        "NYUCHI_API_URL": "http://127.0.0.1:8788",
+        "JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
+        "CREATE_URL": "https://events.mukoko.com/circles?create=1",
+        "APP_WEB_URL": "https://events.mukoko.com",
+      },
+    },
+  },
+}

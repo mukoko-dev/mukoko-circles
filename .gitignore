@@ -9,3 +9,14 @@
 # https://docs.deno.com/runtime/reference/cli/coverage/
 coverage/
 *.lcov
+
+# Node, Astro, Rust, Wrangler
+node_modules/
+dist/
+.astro/
+worker/target/
+worker/build/
+.wrangler/
+.dev.vars
+test-results/
+shots/

@@ -1,0 +1,227 @@
+{
+  "categories": [
+    {
+      "slug": "sport",
+      "name": "Sport and fitness",
+      "description": "Running clubs, football fans and weekend hikers.",
+      "circleCount": 2
+    },
+    {
+      "slug": "music",
+      "name": "Music",
+      "description": "Fans, players and the people who book the gigs.",
+      "circleCount": 2
+    },
+    {
+      "slug": "tech",
+      "name": "Technology",
+      "description": "Builders, designers and the curious.",
+      "circleCount": 2
+    },
+    {
+      "slug": "language",
+      "name": "Language and culture",
+      "description": "Learn, speak and keep our languages alive.",
+      "circleCount": 2
+    },
+    {
+      "slug": "food",
+      "name": "Food",
+      "description": "Recipes, markets and where to eat.",
+      "circleCount": 1
+    },
+    {
+      "slug": "business",
+      "name": "Business",
+      "description": "Traders, founders and the side hustle.",
+      "circleCount": 1
+    }
+  ],
+  "circles": [
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0001",
+      "slug": "harare-runners",
+      "name": "Harare Runners",
+      "description": "Saturday long runs from Borrowdale, coffee after. Every pace is welcome: we wait at the corners.",
+      "circleType": "public",
+      "memberCount": 1284,
+      "postCount": 312,
+      "inLanguage": "en",
+      "categories": [{ "slug": "sport", "name": "Sport and fitness" }],
+      "featured": true,
+      "createdAt": "2026-01-12T07:00:00Z",
+      "updatedAt": "2026-09-30T10:00:00Z",
+      "place": { "name": "Harare" },
+      "actorUri": "https://circles.mukoko.com/c/harare-runners",
+      "links": {
+        "join": "https://events.mukoko.com/circles/0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0001",
+        "app": "mukoko://circles/harare-runners"
+      }
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0002",
+      "slug": "mbira-collective",
+      "name": "Mbira Collective",
+      "description": "Players, makers and listeners of mbira dzavadzimu. Lessons, recordings and Friday sessions.",
+      "circleType": "public",
+      "memberCount": 642,
+      "postCount": 128,
+      "inLanguage": "sn",
+      "categories": [
+        { "slug": "music", "name": "Music" },
+        { "slug": "language", "name": "Language and culture" }
+      ],
+      "featured": true,
+      "createdAt": "2026-02-03T18:00:00Z",
+      "updatedAt": "2026-09-28T12:00:00Z",
+      "place": { "name": "Mutare" }
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0003",
+      "slug": "lagos-design-guild",
+      "name": "Lagos Design Guild",
+      "description": "Product designers, illustrators and type nerds in Lagos and the diaspora. Crits every Wednesday.",
+      "circleType": "public",
+      "memberCount": 2310,
+      "postCount": 540,
+      "inLanguage": "en",
+      "categories": [{ "slug": "tech", "name": "Technology" }],
+      "featured": true,
+      "createdAt": "2026-03-21T09:00:00Z",
+      "updatedAt": "2026-10-01T09:00:00Z",
+      "place": { "name": "Lagos" }
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0004",
+      "slug": "mukoko-news-desk",
+      "name": "Mukoko News Desk",
+      "description": "Headlines from Mukoko News, posted by the editors. Follow along; replies happen in the app.",
+      "circleType": "broadcast",
+      "memberCount": 15420,
+      "postCount": 2201,
+      "inLanguage": "en",
+      "categories": [{ "slug": "business", "name": "Business" }],
+      "featured": false,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-10-04T06:00:00Z"
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0005",
+      "slug": "shona-every-day",
+      "name": "Shona Every Day",
+      "description": "One word, one phrase, one proverb a day. Beginners very welcome. Tichadzidza pamwe chete.",
+      "circleType": "public",
+      "memberCount": 873,
+      "postCount": 365,
+      "inLanguage": "sn",
+      "categories": [{ "slug": "language", "name": "Language and culture" }],
+      "featured": false,
+      "createdAt": "2026-01-05T06:00:00Z",
+      "updatedAt": "2026-10-03T06:00:00Z"
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0006",
+      "slug": "nairobi-js",
+      "name": "Nairobi JS",
+      "description": "JavaScript, TypeScript and the web platform. Monthly meetups at the iHub, talks posted here.",
+      "circleType": "public",
+      "memberCount": 1530,
+      "postCount": 210,
+      "inLanguage": "en",
+      "categories": [{ "slug": "tech", "name": "Technology" }],
+      "featured": false,
+      "createdAt": "2026-04-10T15:00:00Z",
+      "updatedAt": "2026-09-20T15:00:00Z",
+      "place": { "name": "Nairobi" }
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0007",
+      "slug": "bulawayo-braai-club",
+      "name": "Bulawayo Braai Club",
+      "description": "",
+      "circleType": "public",
+      "memberCount": 1,
+      "postCount": 0,
+      "inLanguage": "nd",
+      "categories": [{ "slug": "food", "name": "Food" }],
+      "featured": false,
+      "createdAt": "2026-09-30T17:00:00Z",
+      "updatedAt": "2026-09-30T17:00:00Z"
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0008",
+      "slug": "kwaito-forever",
+      "name": "Kwaito Forever <3 & \"friends\"",
+      "description": "A circle with a tricky name, to prove the escaping. <script>alert(1)</script> {{title}}",
+      "circleType": "public",
+      "memberCount": 54,
+      "postCount": 3,
+      "inLanguage": "zu",
+      "categories": [{ "slug": "music", "name": "Music" }],
+      "featured": false,
+      "createdAt": "2026-06-16T12:00:00Z",
+      "updatedAt": "2026-09-01T12:00:00Z"
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0009",
+      "slug": "comrades-training",
+      "name": "Comrades Training Group",
+      "description": "Ninety kilometres, one step at a time. Plans, long-run reports and race-day logistics.",
+      "circleType": "public",
+      "memberCount": 410,
+      "postCount": 95,
+      "inLanguage": "en",
+      "categories": [{ "slug": "sport", "name": "Sport and fitness" }],
+      "featured": false,
+      "createdAt": "2026-05-01T05:00:00Z",
+      "updatedAt": "2026-09-29T05:00:00Z",
+      "place": { "name": "Durban" }
+    }
+  ],
+  "leaked": [
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a00ff",
+      "slug": "family-chat",
+      "name": "Family chat",
+      "description": "Should never be public.",
+      "circleType": "private",
+      "memberCount": 6
+    },
+    {
+      "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a00fe",
+      "slug": "surprise-party",
+      "name": "Surprise party",
+      "description": "Should never be public.",
+      "circleType": "secret",
+      "memberCount": 12
+    }
+  ],
+  "posts": {
+    "harare-runners": [
+      {
+        "id": "a1000000-0000-4000-8000-000000000001",
+        "headline": "Long run this Saturday",
+        "articleBody": "21 km from the Borrowdale shops at 06:00. Water stop at 10 km.\n\nCoffee after, as always.",
+        "datePublished": "2026-10-01T18:00:00Z",
+        "inLanguage": "en",
+        "tags": ["running", "harare"]
+      },
+      {
+        "id": "a1000000-0000-4000-8000-000000000002",
+        "headline": null,
+        "articleBody": "Well run, everyone, at the Old Mutual half marathon. Photos are in the app.",
+        "datePublished": "2026-09-21T12:00:00Z",
+        "inLanguage": "en",
+        "tags": []
+      },
+      {
+        "id": "a1000000-0000-4000-8000-000000000003",
+        "headline": "New route",
+        "articleBody": "Trying the Mazowe road loop next month. Bring a headlamp.",
+        "datePublished": "2026-09-10T12:00:00Z",
+        "inLanguage": "en",
+        "tags": ["routes"]
+      }
+    ]
+  }
+}

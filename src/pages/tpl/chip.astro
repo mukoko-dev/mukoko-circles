@@ -1,0 +1,11 @@
+---
+/** One category link. A fragment, like card.astro. */
+---
+
+<Fragment set:html="<!--fragment-->" />
+<li>
+  <a class="chip" href="{{href}}"
+    >{"{{name}}"}<span class="chip-count">{"{{count}}"}</span></a
+  >
+</li>
+<Fragment set:html="<!--/fragment-->" />

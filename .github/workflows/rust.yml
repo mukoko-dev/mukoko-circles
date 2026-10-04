@@ -1,0 +1,48 @@
+# The Rust Worker's own gate: format, clippy on the host AND on
+# wasm32-unknown-unknown (the `worker` crate's API is cfg'd for that target,
+# so a host-only clippy never sees entry.rs), and the unit and AS2 tests.
+#
+# The org-required `vite-plus / test` and `vite-plus / build` jobs run
+# `npm test` and `npm run build`, which also compile the Worker and run the
+# end-to-end suite against it; this job is the fast, Rust-only signal.
+name: rust
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  worker:
+    name: fmt, clippy, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: worker
+      - name: Format
+        run: cargo fmt --check
+      - name: Clippy (host)
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Clippy (wasm32, where the Worker runs)
+        run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
+      - name: Test
+        run: cargo test

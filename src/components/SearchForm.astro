@@ -1,0 +1,23 @@
+---
+/** A plain GET form to /search: works with no JavaScript. */
+interface Props {
+  value?: string;
+  id?: string;
+}
+const { value = "", id = "search" } = Astro.props;
+---
+
+<form action="/search" method="get" role="search" class="flex w-full max-w-xl gap-2">
+  <label for={id} class="sr-only">Search circles</label>
+  <input
+    id={id}
+    class="input flex-1"
+    type="search"
+    name="q"
+    value={value}
+    placeholder="Search circles: running, Shona, design…"
+    maxlength="100"
+    autocomplete="off"
+  />
+  <button class="btn-secondary" type="submit">Search</button>
+</form>

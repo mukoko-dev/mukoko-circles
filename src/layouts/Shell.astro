@@ -1,0 +1,87 @@
+---
+/**
+ * The page shell: metadata, fonts, header and footer.
+ *
+ * On the `/tpl/` shells every prop is a `{{placeholder}}` the Worker fills;
+ * on the static pages they are real values. `headExtra` and `storeLinks` are
+ * raw HTML (JSON-LD, the ActivityPub alternate link, store badges).
+ *
+ * No scripts: the CSP is `script-src 'none'`. Dark mode follows the OS
+ * through @bundu/ui's color-scheme.css.
+ */
+import "@fontsource/noto-sans/latin-400.css";
+import "@fontsource/noto-sans/latin-ext-400.css";
+import "@fontsource/noto-sans/latin-600.css";
+import "@fontsource/noto-sans/latin-ext-600.css";
+import "@fontsource/noto-serif/latin-700.css";
+import "@fontsource/noto-serif/latin-ext-700.css";
+import "../styles/global.css";
+import MineralStrip from "@bundu/ui/MineralStrip.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  ogImage?: string;
+  ogType?: string;
+  robots?: string;
+  headExtra?: string;
+  storeLinks?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  ogImage = "https://circles.mukoko.com/og/home.png",
+  ogType = "website",
+  robots = "index, follow",
+  headExtra = "",
+  storeLinks = "",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#4B0082" />
+    <meta name="color-scheme" content="light dark" />
+
+    <meta property="og:site_name" content="Mukoko Circles" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <Fragment set:html={headExtra} />
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 btn-secondary"
+      >Skip to content</a
+    >
+    <MineralStrip />
+    <SiteHeader />
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+    <SiteFooter storeLinks={storeLinks} />
+  </body>
+</html>

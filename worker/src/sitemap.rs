@@ -35,7 +35,7 @@ pub fn sitemap(cfg: &Config, categories: &[Category], circles: &[Circle]) -> Str
     }
     for c in circles.iter().filter(|c| c.is_discoverable()) {
         url(
-            cfg.circle_actor(c),
+            cfg.circle_url(c),
             c.updated_at.as_deref().or(c.created_at.as_deref()),
         );
     }

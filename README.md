@@ -15,7 +15,7 @@
 This repo is **circles.mukoko.com**, which does two jobs:
 
 1. **Discovery.** It lists every discoverable circle (`public` and `broadcast` only, never `private` or `secret`), by category, by size and by search. Each circle gets a shareable page with its own Open Graph card. The **Join** and **Create a circle** buttons send people into the super-app. The point is Mukoko's visibility: every open circle is a page search engines and link previews can find.
-2. **ActivityPub identity.** Every discoverable circle is a federated `Group` actor at `https://circles.mukoko.com/c/{slug}`, found by WebFinger as `@{slug}@circles.mukoko.com`.
+2. **ActivityPub identity.** Every discoverable circle is a federated `Group` actor, addressed by its Mukoko handle: the page is `https://circles.mukoko.com/c/{handle}` and WebFinger finds `@{handle}@circles.mukoko.com`. The actor id is stored once and never changes, so a renamed circle keeps its followers; old handles redirect (see [`docs/api-contract.md`](docs/api-contract.md)). Places are never actors here.
 
 It is **not** where circles are run. It has no accounts, no posting, no moderation and no database. All data comes from the Nyuchi API's public discovery endpoint ([`docs/api-contract.md`](docs/api-contract.md)).
 
@@ -41,14 +41,14 @@ Brand: Mukoko tanzanite as primary (the super-app's mineral), with terracotta, C
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
 | `/`                                                                | Hero, featured circles, categories, search, how it works                       |
 | `/circles`, `/categories/{slug}`, `/search?q=`                     | Lists, paginated by cursor (search is `noindex`)                               |
-| `/c/{slug}`                                                        | The circle page, or with `Accept: application/activity+json` the `Group` actor |
-| `/c/{slug}/join`, `/create`                                        | Redirects into the super-app                                                   |
-| `/c/{slug}/outbox`                                                 | `OrderedCollection` of the circle's approved public posts                      |
-| `/c/{slug}/posts/{id}`                                             | A post as a `Note` (HTML clients go to the circle page)                        |
-| `/c/{slug}/inbox`, `/inbox`                                        | **501** for every method: following from other servers is phase 2              |
-| `/.well-known/webfinger`                                           | `acct:{slug}@circles.mukoko.com` resolves to the actor (RFC 7033)              |
+| `/c/{handle}`                                                      | The circle page, or with `Accept: application/activity+json` the `Group` actor |
+| `/c/{handle}/join`, `/create`                                      | Redirects into the super app, by device (see the contract)                     |
+| `/c/{handle}/outbox`                                               | `OrderedCollection` of the circle's approved public posts                      |
+| `/c/{handle}/posts/{id}`                                           | A post as a `Note` (HTML clients go to the circle page)                        |
+| `/c/{handle}/inbox`, `/inbox`                                      | **501** for every method: following from other servers is phase 2              |
+| `/.well-known/webfinger`                                           | `acct:{handle}@circles.mukoko.com` resolves to the actor (RFC 7033)            |
 | `/.well-known/host-meta`, `/.well-known/nodeinfo`, `/nodeinfo/2.1` | Discovery for fediverse servers                                                |
-| `/og/{slug}.png`, `/og/home.png`                                   | 1200×630 Open Graph cards                                                      |
+| `/og/{handle}.png`, `/og/home.png`                                 | 1200×630 Open Graph cards                                                      |
 | `/sitemap.xml`, `/robots.txt`                                      | For search engines                                                             |
 
 ## Federation, phase by phase

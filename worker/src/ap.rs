@@ -39,16 +39,21 @@ pub fn context() -> Value {
 }
 
 /// The circle as an ActivityStreams `Group` actor.
+///
+/// `id`, `inbox` and `outbox` hang off the stored actor id; `url` and
+/// `preferredUsername` follow the current handle. After a rename they differ,
+/// which is exactly what keeps the actor (and its followers) in place.
 pub fn actor(cfg: &Config, c: &Circle) -> Value {
     let id = cfg.circle_actor(c);
+    let page = cfg.circle_url(c);
     let mut actor = json!({
         "@context": context(),
         "id": id,
         "type": "Group",
-        "preferredUsername": c.slug,
+        "preferredUsername": c.username(),
         "name": c.name,
         "summary": text_to_html(&c.summary()),
-        "url": id,
+        "url": page,
         "inbox": format!("{id}/inbox"),
         "outbox": format!("{id}/outbox"),
         "discoverable": true,
@@ -56,7 +61,7 @@ pub fn actor(cfg: &Config, c: &Circle) -> Value {
         "icon": {
             "type": "Image",
             "mediaType": "image/png",
-            "url": format!("{}/og/{}.png", cfg.site_url, c.slug)
+            "url": format!("{}/og/{}.png", cfg.site_url, c.key())
         },
         "tag": c.categories.iter().map(|cat| json!({
             "type": "Link",
@@ -84,7 +89,7 @@ pub fn actor(cfg: &Config, c: &Circle) -> Value {
         json!([{
             "type": "Link",
             "name": "Join in Mukoko",
-            "href": cfg.join_url(c),
+            "href": format!("{page}/join"),
             "mediaType": "text/html"
         }]),
     );
@@ -174,28 +179,38 @@ pub fn inbox_not_implemented(join: &str) -> Value {
     })
 }
 
-/// Parse `resource` into a circle slug. Accepts `acct:{slug}@{host}` (the
-/// leading `acct:` is optional, as some clients drop it) and the actor URL
-/// itself, `https://{host}/c/{slug}`.
+/// Parse `resource` into a circle key (lower-cased). Accepts
+/// `acct:{handle}@{host}` (the leading `acct:` is optional, as some clients
+/// drop it) and a circle URL, `https://{host}/c/{key}`. The key may be a
+/// current handle, the slug or a retired handle: the API resolves all three,
+/// and the JRD always answers with the current one.
 pub fn webfinger_slug(cfg: &Config, resource: Option<&str>) -> Result<String, WebfingerError> {
-    let slug = map::webfinger_user(resource, &cfg.host, "c/")?;
-    if crate::model::is_valid_slug(&slug) {
+    let slug = map::webfinger_user(resource, &cfg.host, "c/")?.to_ascii_lowercase();
+    if crate::model::is_valid_key(&slug) {
         Ok(slug)
     } else {
         Err(WebfingerError::NotFound)
     }
 }
 
-/// The JRD for a circle (RFC 7033).
+/// The JRD for a circle (RFC 7033). Whatever name the lookup used (a
+/// retired handle, the slug), the `subject` is the current handle and `self`
+/// is the stored actor id.
 pub fn webfinger(cfg: &Config, c: &Circle) -> Value {
     let actor = cfg.circle_actor(c);
-    let avatar = format!("{}/og/{}.png", cfg.site_url, c.slug);
+    let page = cfg.circle_url(c);
+    let avatar = format!("{}/og/{}.png", cfg.site_url, c.key());
+    let aliases: Vec<&str> = if page == actor {
+        vec![&actor]
+    } else {
+        vec![&actor, &page]
+    };
     map::jrd(
-        &format!("acct:{}@{}", c.slug, cfg.host),
-        &[&actor],
+        &format!("acct:{}@{}", c.username(), cfg.host),
+        &aliases,
         vec![
             map::self_link(&actor),
-            map::profile_page_link(&actor),
+            map::profile_page_link(&page),
             json!({ "rel": "http://webfinger.net/rel/avatar", "type": "image/png", "href": avatar }),
         ],
     )
@@ -287,7 +302,63 @@ mod tests {
         assert_eq!(a["published"], "2026-01-02T03:04:05Z");
         assert_eq!(
             a["attachment"][0]["href"],
-            "https://events.mukoko.com/circles/c1"
+            "https://circles.mukoko.com/c/harare-runners/join"
+        );
+    }
+
+    #[test]
+    fn renamed_circle_keeps_its_actor_id() {
+        let mut c = circle();
+        c.handle = Some("HarareRunClub".into());
+        c.aliases = vec!["harare-runners".into()];
+        c.actor_uri = Some("https://circles.mukoko.com/c/harare-runners".into());
+        let a = actor(&cfg(), &c);
+        assert_eq!(a["id"], "https://circles.mukoko.com/c/harare-runners");
+        assert_eq!(a["preferredUsername"], "HarareRunClub");
+        assert_eq!(a["url"], "https://circles.mukoko.com/c/hararerunclub");
+        assert_eq!(
+            a["inbox"],
+            "https://circles.mukoko.com/c/harare-runners/inbox"
+        );
+        let j = webfinger(&cfg(), &c);
+        assert_eq!(j["subject"], "acct:HarareRunClub@circles.mukoko.com");
+        assert_eq!(
+            j["links"][0]["href"],
+            "https://circles.mukoko.com/c/harare-runners"
+        );
+        assert_eq!(
+            j["links"][1]["href"],
+            "https://circles.mukoko.com/c/hararerunclub"
+        );
+        assert_eq!(j["aliases"].as_array().unwrap().len(), 2);
+        let n = note(
+            &cfg(),
+            &c,
+            &Post {
+                id: "p1".into(),
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            n["id"],
+            "https://circles.mukoko.com/c/harare-runners/posts/p1"
+        );
+        assert_eq!(
+            n["attributedTo"],
+            "https://circles.mukoko.com/c/harare-runners"
+        );
+    }
+
+    #[test]
+    fn webfinger_accepts_handles() {
+        let c = cfg();
+        assert_eq!(
+            webfinger_slug(&c, Some("acct:HarareRunClub@circles.mukoko.com")),
+            Ok("hararerunclub".into())
+        );
+        assert_eq!(
+            webfinger_slug(&c, Some("acct:harare_run@circles.mukoko.com")),
+            Ok("harare_run".into())
         );
     }
 

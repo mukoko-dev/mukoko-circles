@@ -1,0 +1,20 @@
+/*
+ * TODO(mzizi): https://github.com/mzizi-dev/packages-npm/pull/46
+ * A copy of @bundu/ui's generated `styles/brand-circles.css` from that PR
+ * (canon row: mzizi-dev/mzizi-registry#449). Mukoko Circles is tanzanite
+ * primary with a terracotta accent (owner decision, 2026-10-06); @bundu/ui
+ * 0.3.0 only ships brand-mukoko.css, which has no accent. Delete this file
+ * and import `@bundu/ui/styles/brand-circles.css` once a release with it is
+ * installed. Tokens only: no hex here.
+ */
+:root {
+  --primary: var(--color-tanzanite);
+  --ring: var(--color-tanzanite);
+  --brand-accent: var(--color-terracotta);
+}
+.dark,
+[data-theme="dark"] {
+  --primary: var(--color-tanzanite);
+  --ring: var(--color-tanzanite);
+  --brand-accent: var(--color-terracotta);
+}

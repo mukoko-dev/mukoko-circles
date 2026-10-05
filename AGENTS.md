@@ -25,8 +25,27 @@ maintain consistency."
 - A local copy is allowed only while that upstream PR is open, marked at the
   top of the file with `TODO(mzizi): <upstream PR URL>`, and is deleted when
   the release is installed. `src/styles/global.css` defines no components.
-- The one local component is `src/components/Mark.astro`, the Circles logo:
-  brand content for `DiscoverShell`'s `brand` slot, not a UI component.
+- The one local component of our own is `src/components/Mark.astro`, the
+  Circles logo: brand content for `DiscoverShell`'s `brand` slot, not a UI
+  component.
+- Current `TODO(mzizi)` copies, all tracked in mzizi-dev/packages-npm#48:
+  `src/components/mzizi/` (`DetailHero`, `DiscoverBreadcrumb`, `MetaList`:
+  the Discover detail pattern, not in @bundu/ui 0.3.0; MetaList carries the
+  fix in mzizi-dev/mzizi-registry#450) and `src/styles/brand-circles.css`
+  (mzizi-dev/packages-npm#46).
+
+## The circle page is the Discover detail pattern
+
+`/c/<handle>` (the canonical address; the slug and retired handles redirect)
+is `DiscoverBreadcrumb` + `DetailHero` + `OpenInApp` + `MetaList`, then the
+public posts. Only public and broadcast circles are ever listed or rendered:
+`Circle::is_discoverable` drops anything else even if the Nyuchi API sends
+it. All data comes from the Nyuchi API (`NYUCHI_API_URL`).
+
+## Brand
+
+Mukoko Circles is tanzanite primary with a terracotta accent
+(`--brand-accent`), from the `brand-circles.css` overlay. No local tokens.
 
 ## No inline styles
 

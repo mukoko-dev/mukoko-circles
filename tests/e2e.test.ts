@@ -138,6 +138,38 @@ describe("pages", () => {
     ])
       expect(home, slot).toContain(`data-slot="${slot}"`);
     expect(home).toMatch(/data-variant="circle"/);
+    // The circle page is the Discover detail pattern.
+    const circle = await (await get("/c/harare-runners")).text();
+    for (const slot of [
+      "detail-hero",
+      "discover-breadcrumb",
+      "open-in-app",
+      "meta-list",
+    ])
+      expect(circle, slot).toContain(`data-slot="${slot}"`);
+    // One <h1>, the circle's name, and the breadcrumb ends on it.
+    expect(circle.match(/<h1[\s>]/g)).toHaveLength(1);
+    expect(circle).toMatch(
+      /<span aria-current="page"[^>]*>\s*Harare Runners\s*<\/span>/,
+    );
+  });
+
+  it("wears the Circles brand: tanzanite primary, terracotta accent", async () => {
+    const html = await (await get("/")).text();
+    const href = html.match(/<link rel="stylesheet" href="([^"]+\.css)"/)?.[1];
+    expect(href).toBeTruthy();
+    const css = await (await get(href!)).text();
+    expect(css).toMatch(/--primary:\s*var\(--color-tanzanite\)/);
+    expect(css).toMatch(/--brand-accent:\s*var\(--color-terracotta\)/);
+  });
+
+  it("a card shows the circle's image when the API sends one, else its monogram", async () => {
+    const html = await (await get("/categories/tech")).text();
+    expect(html).toContain(
+      'src="https://assets.mukoko.com/circles/lagos-design-guild.png"',
+    );
+    expect(html).toContain('data-slot="discover-card-initial"');
+    expect(html).not.toMatch(/<img[^>]*\ssrc=""/);
   });
 
   it("escapes what the API sends", async () => {
@@ -153,6 +185,9 @@ describe("pages", () => {
     const html = await r.text();
     noPlaceholders(html);
     expect(html).toMatch(/<h1 [^>]*>Technology<\/h1>/);
+    // Its own chip is the current one; no other is.
+    expect(html).toMatch(/href="\/categories\/tech" aria-current="page"/);
+    expect(html.match(/<a [^>]*aria-current="page"/g)).toHaveLength(1);
     expect(html).toContain("Nairobi JS");
     expect(html).not.toContain("Harare Runners");
     expect((await get("/categories/no-such-thing")).status).toBe(404);

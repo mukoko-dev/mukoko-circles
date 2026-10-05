@@ -1,8 +1,10 @@
 /*
  * The design system, straight from the package: Mzizi tokens, the @bundu/ui
- * component classes, the OS colour scheme, and Mukoko's brand overlay
- * (tanzanite). Nothing here redefines a token or a component: the pages are
- * built from the Mzizi Discover Standard (@bundu/ui/discover/*). If
+ * component classes, the OS colour scheme, and the Mukoko Circles brand
+ * overlay (tanzanite primary, terracotta --brand-accent; a TODO(mzizi) copy
+ * until @bundu/ui ships brand-circles.css). Nothing here redefines a token
+ * or a component: the pages are built from the Mzizi Discover Standard
+ * (@bundu/ui/discover/*). If
  * something is missing or wrong, it is fixed in Mzizi, not here (the
  * upstream-first rule, mzizi-dev/mzizi-registry CONTRIBUTING.md).
  */
@@ -10,7 +12,7 @@
 @import "@bundu/ui/styles/theme.css";
 @import "@bundu/ui/styles/globals.css";
 @import "@bundu/ui/styles/color-scheme.css";
-@import "@bundu/ui/styles/brand-mukoko.css";
+@import "./brand-circles.css";
 @source "../../node_modules/@bundu/ui/src";
 
 @layer base {

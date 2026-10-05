@@ -686,11 +686,9 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
             }
             match ctx.posts(&slug, 20, cursor.as_deref()).await {
                 Upstream::Ok(p) => activity(&ap::outbox_page(cfg, &c, &p, cursor.as_deref()), 200),
-                Upstream::NotFound => json_error(
-                    501,
-                    "not_implemented",
-                    "The outbox can't list posts yet: the Nyuchi API does not serve this circle's public posts. The actor and WebFinger work; posts follow when the API's public posts endpoint lands.",
-                ),
+                Upstream::NotFound => {
+                    json_error(404, "not_found", "No discoverable circle has that name.")
+                }
                 Upstream::Unavailable(e) => {
                     console_error!("outbox posts {slug}: {e}");
                     json_error(

@@ -70,14 +70,18 @@ export function handler(req, res) {
       );
     return send(res, 200, { data: cats, nextCursor: null, total: cats.length });
   }
-  const slug = rest[0];
-  const circle =
-    data.circles.find((c) => c.slug === slug) ??
-    data.leaked.find((c) => c.slug === slug);
+  // As the API: a circle answers to its slug, its current handle and its
+  // retired handles (the aliases), case-insensitively.
+  const key = rest[0].toLowerCase();
+  const answers = (c) =>
+    c.slug === key ||
+    (c.handle ?? "").toLowerCase() === key ||
+    (c.aliases ?? []).some((a) => a.toLowerCase() === key);
+  const circle = data.circles.find(answers) ?? data.leaked.find(answers);
   if (!circle) return send(res, 404, { detail: "Circle not found" });
   if (rest.length === 1) return send(res, 200, circle);
   if (rest[1] === "posts") {
-    const posts = data.posts[slug] ?? [];
+    const posts = data.posts[circle.slug] ?? [];
     if (rest.length === 2) return send(res, 200, page(posts, url));
     const post = posts.find((p) => p.id === rest[2]);
     return post

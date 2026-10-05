@@ -44,6 +44,9 @@ fn config(env: &Env) -> Config {
     if let Some(v) = var(env, "JOIN_URL_TEMPLATE") {
         cfg.join_url_template = v;
     }
+    if let Some(v) = var(env, "WEB_JOIN_URL_TEMPLATE") {
+        cfg.web_join_url_template = v;
+    }
     if let Some(v) = var(env, "CREATE_URL") {
         cfg.create_url = v;
     }
@@ -251,8 +254,9 @@ impl Ctx<'_> {
         };
         match api_get::<Circle>(self.env, &api::circle(api, slug)).await {
             // Defence in depth: never show or federate a circle that is not
-            // discoverable, or one the API returned under another slug.
-            Upstream::Ok(c) if c.is_discoverable() && c.slug == slug => Upstream::Ok(c),
+            // discoverable, or one that does not answer to the name asked
+            // for (its handle, its slug, or a retired handle).
+            Upstream::Ok(c) if c.is_discoverable() && c.answers_to(slug) => Upstream::Ok(c),
             Upstream::Ok(_) => Upstream::NotFound,
             other => other,
         }
@@ -382,6 +386,9 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
             return Ok(secure(resp));
         }
         Route::Create => return redirect(&cfg.create_url, 302),
+        Route::Lowercase { location } => {
+            return redirect(&format!("{}{location}", cfg.site_url), 301);
+        }
         Route::OgHome => {
             let key = format!("{}/og/home.png?v={}", cfg.site_url, cfg.version);
             let content = og::home_content(&cfg);
@@ -580,9 +587,17 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
         }
 
         Route::Circle { slug } => match ctx.circle(&slug).await {
+            // An AS2 request on any name gets the actor with its stored id.
             Upstream::Ok(c) if wants_ap => activity(&ap::actor(cfg, &c), 200),
+            // A browser on a former handle or the slug goes to the current
+            // address, so there is one page per circle.
+            Upstream::Ok(c) if slug != c.key() => {
+                let mut r = redirect(&cfg.circle_url(&c), 301)?;
+                r.headers_mut().set("vary", "Accept")?;
+                Ok(r)
+            }
             Upstream::Ok(c) => {
-                let posts = match ctx.posts(&slug, 5, None).await {
+                let posts = match ctx.posts(&c.slug, 5, None).await {
                     Upstream::Ok(p) => Some(p),
                     _ => None,
                 };
@@ -617,7 +632,14 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
         },
 
         Route::Join { slug } => match ctx.circle(&slug).await {
-            Upstream::Ok(c) => redirect(&cfg.join_url(&c), 302),
+            Upstream::Ok(c) => {
+                let phone = crate::config::is_phone(req.headers().get("user-agent")?.as_deref());
+                // Where it goes depends on the device, so no shared cache.
+                let mut r = redirect(&cfg.join_url(&c, phone), 302)?;
+                r.headers_mut().set("cache-control", "private, no-store")?;
+                r.headers_mut().set("vary", "User-Agent")?;
+                Ok(r)
+            }
             Upstream::NotFound => ctx.not_found(),
             // The directory is down; the super app may not be.
             Upstream::Unavailable(_) => redirect(&cfg.app_web_url, 302),
@@ -684,7 +706,7 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
             if !page {
                 return activity(&ap::outbox(cfg, &c, None), 200);
             }
-            match ctx.posts(&slug, 20, cursor.as_deref()).await {
+            match ctx.posts(&c.slug, 20, cursor.as_deref()).await {
                 Upstream::Ok(p) => activity(&ap::outbox_page(cfg, &c, &p, cursor.as_deref()), 200),
                 Upstream::NotFound => {
                     json_error(404, "not_found", "No discoverable circle has that name.")
@@ -719,7 +741,7 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
                 Ok(a) => a.to_string(),
                 Err(e) => return ctx.unavailable(&e),
             };
-            match api_get::<Post>(&env, &api::post(&api, &slug, &id)).await {
+            match api_get::<Post>(&env, &api::post(&api, &c.slug, &id)).await {
                 Upstream::Ok(p) if p.id == id => activity(&ap::note(cfg, &c, &p), 200),
                 Upstream::Ok(_) | Upstream::NotFound => {
                     json_error(404, "not_found", "No such post.")
@@ -736,8 +758,9 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
             Upstream::Ok(c) => {
                 let v = c.updated_at.clone().unwrap_or_default();
                 let key = format!(
-                    "{}/og/{slug}.png?v={}&b={}",
+                    "{}/og/{}.png?v={}&b={}",
                     cfg.site_url,
+                    c.key(),
                     ap::encode(&v),
                     cfg.version
                 );
@@ -785,6 +808,7 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
         | Route::NodeinfoLinks
         | Route::HostMeta
         | Route::Create
+        | Route::Lowercase { .. }
         | Route::OgHome => {
             unreachable!("handled above")
         }

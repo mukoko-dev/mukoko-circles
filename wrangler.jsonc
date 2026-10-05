@@ -46,8 +46,8 @@
     // desktops to the public page (back here). Circles lives inside Mukoko
     // Events until the super app ships.
     "WEB_JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
-    // A placeholder until Mukoko Events builds its create-circle flow
-    // (mukoko-dev/mukoko-events#159, on POST /v1/circles).
+    // Mukoko Events' create-circle form (mukoko-dev/mukoko-events#159),
+    // which creates the circle with POST /v1/circles.
     "CREATE_URL": "https://events.mukoko.com/circles?create=1",
     "APP_WEB_URL": "https://events.mukoko.com",
   },

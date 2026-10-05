@@ -41,6 +41,8 @@
     // Circles lives inside Mukoko Events until the super app ships. When the
     // API sends `links.join` per circle, that wins over this template.
     "JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
+    // A placeholder until Mukoko Events builds its create-circle flow
+    // (mukoko-dev/mukoko-events#159, on POST /v1/circles).
     "CREATE_URL": "https://events.mukoko.com/circles?create=1",
     "APP_WEB_URL": "https://events.mukoko.com",
   },

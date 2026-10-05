@@ -253,10 +253,10 @@ describe("ActivityPub", () => {
     );
   });
 
-  it("outbox pages say 501 when the API has no posts endpoint", async () => {
+  it("a circle with no public posts has an empty outbox page", async () => {
     const r = await get("/c/mbira-collective/outbox?page=true");
-    expect(r.status).toBe(501);
-    expect((await r.json()).error).toBe("not_implemented");
+    expect(r.status).toBe(200);
+    expect((await r.json()).orderedItems).toEqual([]);
   });
 
   it("a post resolves to a Note", async () => {

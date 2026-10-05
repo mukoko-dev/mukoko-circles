@@ -126,4 +126,4 @@ The API side (circle handles in the one registry, `handle` and `aliases` on the 
 
 Templates take `{id}`, `{slug}` and `{handle}` (the circle's path key).
 
-"Create a circle" goes to `/create`, which redirects to `CREATE_URL`. Today that is a placeholder, `https://events.mukoko.com/circles?create=1`: Mukoko Events has no create-circle page yet ([mukoko-dev/mukoko-events#159](https://github.com/mukoko-dev/mukoko-events/issues/159) builds one on `POST /v1/circles`). `/open` has no "new circle" link, so this stays a web URL.
+"Create a circle" goes to `/create`, which redirects to `CREATE_URL`. That is `https://events.mukoko.com/circles?create=1`, Mukoko Events' create-circle form ([mukoko-dev/mukoko-events#159](https://github.com/mukoko-dev/mukoko-events/issues/159)). The form signs the person in first if needed, creates the circle with `POST /v1/circles`, and opens its page. A public or broadcast circle appears here within five minutes. `/open` has no "new circle" link, so this stays a web URL.

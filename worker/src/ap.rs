@@ -10,87 +10,32 @@
 //! Everything here is a pure function of the data the API returned, tested
 //! natively; `tests/as2.rs` checks every term against the vendored AS2 context.
 
+//!
+//! The protocol plumbing (context, content negotiation, escaping, WebFinger
+//! parsing, NodeInfo, collection pages) is the shared Mzizi crate
+//! `mzizi-activitypub` (decision Q5, mukoko-dev/kweli#171), which kweli.mukoko.com
+//! uses too. What is left here is what makes a circle a circle.
+
 use crate::config::Config;
 use crate::model::{Circle, Page, Post};
+use mzizi_activitypub as map;
 use serde_json::{Value, json};
 
-pub const AS_PUBLIC: &str = "https://www.w3.org/ns/activitystreams#Public";
-pub const AS_CONTEXT: &str = "https://www.w3.org/ns/activitystreams";
-pub const ACTIVITY_JSON: &str = "application/activity+json";
-pub const JRD_JSON: &str = "application/jrd+json";
-pub const NODEINFO_PROFILE: &str = "http://nodeinfo.diaspora.software/ns/schema/2.1";
+pub use map::{
+    ACTIVITY_JSON, AS_CONTEXT, AS_PUBLIC, JRD_JSON, NODEINFO_PROFILE, WebfingerError, encode,
+    text_to_html, wants_activity_json,
+};
 
 /// The JSON-LD context for documents this site serves: AS2, plus three
 /// widely used extension terms (Mastodon's), each mapped to its IRI so a
 /// JSON-LD processor expands them rather than dropping them.
 pub fn context() -> Value {
-    json!([
-        AS_CONTEXT,
-        {
-            "toot": "http://joinmastodon.org/ns#",
-            "discoverable": "toot:discoverable",
-            "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
-            "Hashtag": "as:Hashtag"
-        }
-    ])
-}
-
-/// Does this `Accept` header ask for ActivityPub rather than a web page?
-///
-/// Only an explicit ActivityPub media type counts; `*/*` never does, so a
-/// browser (which sends `text/html,…,*/*;q=0.8`) always gets HTML. When both
-/// are named, the higher `q` wins and a tie goes to ActivityPub, which is what
-/// a federating server that lists both means.
-pub fn wants_activity_json(accept: Option<&str>) -> bool {
-    let Some(accept) = accept else { return false };
-    let mut ap_q: f32 = 0.0;
-    let mut html_q: f32 = 0.0;
-    for range in accept.split(',') {
-        let mut parts = range.split(';').map(str::trim);
-        let media = parts.next().unwrap_or("").to_ascii_lowercase();
-        let mut q: f32 = 1.0;
-        let mut profile: Option<String> = None;
-        for p in parts {
-            if let Some((k, v)) = p.split_once('=') {
-                let k = k.trim().to_ascii_lowercase();
-                let v = v.trim().trim_matches('"');
-                if k == "q" {
-                    q = v.parse().unwrap_or(0.0);
-                } else if k == "profile" {
-                    profile = Some(v.to_string());
-                }
-            }
-        }
-        let is_ap = media == ACTIVITY_JSON
-            || (media == "application/ld+json"
-                && profile
-                    .as_deref()
-                    .is_none_or(|p| p.split(' ').any(|x| x == AS_CONTEXT)));
-        if is_ap {
-            ap_q = ap_q.max(q);
-        } else if matches!(
-            media.as_str(),
-            "text/html" | "application/xhtml+xml" | "text/*" | "*/*"
-        ) {
-            html_q = html_q.max(q);
-        }
-    }
-    ap_q > 0.0 && ap_q >= html_q
-}
-
-/// Plain text to the small HTML subset ActivityPub `content` and `summary`
-/// carry: escaped, paragraphs from blank lines, `<br>` for single breaks.
-pub fn text_to_html(text: &str) -> String {
-    text.split("\n\n")
-        .map(str::trim)
-        .filter(|p| !p.is_empty())
-        .map(|p| {
-            format!(
-                "<p>{}</p>",
-                crate::template::escape(p).replace('\n', "<br>")
-            )
-        })
-        .collect()
+    map::context(json!({
+        "toot": "http://joinmastodon.org/ns#",
+        "discoverable": "toot:discoverable",
+        "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+        "Hashtag": "as:Hashtag"
+    }))
 }
 
 /// The circle as an ActivityStreams `Group` actor.
@@ -149,34 +94,20 @@ pub fn actor(cfg: &Config, c: &Circle) -> Value {
 /// The outbox, as a collection pointing at its first page.
 pub fn outbox(cfg: &Config, c: &Circle, total: Option<u64>) -> Value {
     let id = format!("{}/outbox", cfg.circle_actor(c));
-    json!({
-        "@context": context(),
-        "id": id,
-        "type": "OrderedCollection",
-        "totalItems": total.unwrap_or(c.post_count),
-        "first": format!("{id}?page=true"),
-    })
+    map::ordered_collection(context(), &id, total.unwrap_or(c.post_count))
 }
 
 /// One page of the outbox: a `Create` for each public post, newest first.
 pub fn outbox_page(cfg: &Config, c: &Circle, page: &Page<Post>, cursor: Option<&str>) -> Value {
     let outbox = format!("{}/outbox", cfg.circle_actor(c));
-    let id = match cursor {
-        Some(cur) => format!("{outbox}?page=true&cursor={}", encode(cur)),
-        None => format!("{outbox}?page=true"),
-    };
     let items: Vec<Value> = page.data.iter().map(|p| create(cfg, c, p)).collect();
-    let mut v = json!({
-        "@context": context(),
-        "id": id,
-        "type": "OrderedCollectionPage",
-        "partOf": outbox,
-        "orderedItems": items,
-    });
-    if let Some(next) = &page.next_cursor {
-        v["next"] = json!(format!("{outbox}?page=true&cursor={}", encode(next)));
-    }
-    v
+    map::ordered_collection_page(
+        context(),
+        &outbox,
+        cursor,
+        items,
+        page.next_cursor.as_deref(),
+    )
 }
 
 pub fn note_id(cfg: &Config, c: &Circle, post_id: &str) -> String {
@@ -191,7 +122,7 @@ pub fn note(cfg: &Config, c: &Circle, p: &Post) -> Value {
     if let Some(h) = p.headline.as_deref().filter(|h| !h.trim().is_empty()) {
         body.push_str(&format!(
             "<p><strong>{}</strong></p>",
-            crate::template::escape(h.trim())
+            map::escape_html(h.trim())
         ));
     }
     body.push_str(&text_to_html(&p.article_body));
@@ -243,44 +174,11 @@ pub fn inbox_not_implemented(join: &str) -> Value {
     })
 }
 
-/// Why a WebFinger lookup failed.
-#[derive(Debug, PartialEq, Eq)]
-pub enum WebfingerError {
-    /// No `resource`, or one we cannot parse: 400.
-    BadRequest(&'static str),
-    /// A well-formed resource on another host, or not a circle: 404.
-    NotFound,
-}
-
 /// Parse `resource` into a circle slug. Accepts `acct:{slug}@{host}` (the
 /// leading `acct:` is optional, as some clients drop it) and the actor URL
 /// itself, `https://{host}/c/{slug}`.
 pub fn webfinger_slug(cfg: &Config, resource: Option<&str>) -> Result<String, WebfingerError> {
-    let r = resource
-        .map(str::trim)
-        .filter(|r| !r.is_empty())
-        .ok_or(WebfingerError::BadRequest(
-            "the resource parameter is required",
-        ))?;
-    let slug = if let Some(rest) = r.strip_prefix("https://") {
-        let (host, path) = rest.split_once('/').unwrap_or((rest, ""));
-        if !host.eq_ignore_ascii_case(&cfg.host) {
-            return Err(WebfingerError::NotFound);
-        }
-        path.strip_prefix("c/")
-            .ok_or(WebfingerError::NotFound)?
-            .to_string()
-    } else {
-        let acct = r.strip_prefix("acct:").unwrap_or(r);
-        let acct = acct.strip_prefix('@').unwrap_or(acct);
-        let (user, host) = acct
-            .rsplit_once('@')
-            .ok_or(WebfingerError::BadRequest("expected acct:{circle}@{host}"))?;
-        if !host.eq_ignore_ascii_case(&cfg.host) {
-            return Err(WebfingerError::NotFound);
-        }
-        user.to_ascii_lowercase()
-    };
+    let slug = map::webfinger_user(resource, &cfg.host, "c/")?;
     if crate::model::is_valid_slug(&slug) {
         Ok(slug)
     } else {
@@ -291,24 +189,21 @@ pub fn webfinger_slug(cfg: &Config, resource: Option<&str>) -> Result<String, We
 /// The JRD for a circle (RFC 7033).
 pub fn webfinger(cfg: &Config, c: &Circle) -> Value {
     let actor = cfg.circle_actor(c);
-    json!({
-        "subject": format!("acct:{}@{}", c.slug, cfg.host),
-        "aliases": [actor],
-        "links": [
-            { "rel": "self", "type": ACTIVITY_JSON, "href": actor },
-            { "rel": "http://webfinger.net/rel/profile-page", "type": "text/html", "href": actor },
-            { "rel": "http://webfinger.net/rel/avatar", "type": "image/png", "href": format!("{}/og/{}.png", cfg.site_url, c.slug) }
-        ]
-    })
+    let avatar = format!("{}/og/{}.png", cfg.site_url, c.slug);
+    map::jrd(
+        &format!("acct:{}@{}", c.slug, cfg.host),
+        &[&actor],
+        vec![
+            map::self_link(&actor),
+            map::profile_page_link(&actor),
+            json!({ "rel": "http://webfinger.net/rel/avatar", "type": "image/png", "href": avatar }),
+        ],
+    )
 }
 
 /// `/.well-known/nodeinfo`: where the NodeInfo document lives.
 pub fn nodeinfo_links(cfg: &Config) -> Value {
-    json!({
-        "links": [
-            { "rel": NODEINFO_PROFILE, "href": format!("{}/nodeinfo/2.1", cfg.site_url) }
-        ]
-    })
+    map::nodeinfo_links(&cfg.site_url)
 }
 
 /// NodeInfo 2.1. Circles are groups, not user accounts, so `users` is empty
@@ -322,25 +217,13 @@ pub fn nodeinfo(cfg: &Config, circles: Option<u64>) -> Value {
     if let Some(n) = circles {
         metadata["circles"] = json!(n);
     }
-    json!({
-        "version": "2.1",
-        "software": {
-            "name": "mukoko-circles",
-            "version": cfg.version,
-            "repository": "https://github.com/mukoko-dev/mukoko-circles",
-            "homepage": cfg.site_url
-        },
-        "protocols": ["activitypub"],
-        "services": { "inbound": [], "outbound": [] },
-        "openRegistrations": false,
-        "usage": { "users": {} },
-        "metadata": metadata
+    map::nodeinfo(&map::NodeInfo {
+        software: "mukoko-circles",
+        version: &cfg.version,
+        repository: "https://github.com/mukoko-dev/mukoko-circles",
+        homepage: &cfg.site_url,
+        metadata,
     })
-}
-
-/// Percent-encode a query value.
-pub fn encode(s: &str) -> String {
-    url::form_urlencoded::byte_serialize(s.as_bytes()).collect()
 }
 
 #[cfg(test)]

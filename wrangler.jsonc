@@ -3,7 +3,8 @@
 //
 // Configuration is vars, set here or by the owner script; the API client
 // pair is secrets, never in this file:
-//   vars:    SITE_URL, NYUCHI_API_URL, JOIN_URL_TEMPLATE, CREATE_URL,
+//   vars:    SITE_URL, NYUCHI_API_URL, JOIN_URL_TEMPLATE,
+//            WEB_JOIN_URL_TEMPLATE, CREATE_URL,
 //            APP_WEB_URL, APP_STORE_URL, PLAY_STORE_URL
 //   secrets: NYUCHI_API_CLIENT_ID, NYUCHI_API_CLIENT_SECRET (optional: the
 //            discovery endpoint is public; the pair identifies this caller)
@@ -38,9 +39,13 @@
   "vars": {
     "SITE_URL": "https://circles.mukoko.com",
     "NYUCHI_API_URL": "https://api.nyuchi.com",
-    // Circles lives inside Mukoko Events until the super app ships. When the
-    // API sends `links.join` per circle, that wins over this template.
-    "JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
+    // "Join" on a phone: the Mukoko link, whose page opens the super app.
+    // {handle} is the circle's path key (its handle, or its slug).
+    "JOIN_URL_TEMPLATE": "https://mukoko.com/open/circles/{handle}",
+    // "Join" on a desktop: the circle in the web app. Not /open, which sends
+    // desktops to the public page (back here). Circles lives inside Mukoko
+    // Events until the super app ships.
+    "WEB_JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
     // A placeholder until Mukoko Events builds its create-circle flow
     // (mukoko-dev/mukoko-events#159, on POST /v1/circles).
     "CREATE_URL": "https://events.mukoko.com/circles?create=1",
@@ -61,7 +66,8 @@
       "vars": {
         "SITE_URL": "https://circles.mukoko.com",
         "NYUCHI_API_URL": "http://127.0.0.1:8788",
-        "JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
+        "JOIN_URL_TEMPLATE": "https://mukoko.com/open/circles/{handle}",
+        "WEB_JOIN_URL_TEMPLATE": "https://events.mukoko.com/circles/{id}",
         "CREATE_URL": "https://events.mukoko.com/circles?create=1",
         "APP_WEB_URL": "https://events.mukoko.com",
       },

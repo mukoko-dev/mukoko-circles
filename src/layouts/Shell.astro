@@ -1,13 +1,16 @@
 ---
 /**
- * The page shell: metadata, fonts, header and footer.
+ * The page shell, on the Mzizi Discover Standard: DiscoverMeta in <head>,
+ * DiscoverShell in <body> (skip link, mineral strip, header, main, footer).
+ * Only the brand is ours: the Circles mark and wordmark.
  *
  * On the `/tpl/` shells every prop is a `{{placeholder}}` the Worker fills;
  * on the static pages they are real values. `headExtra` and `storeLinks` are
  * raw HTML (JSON-LD, the ActivityPub alternate link, store badges).
  *
- * No scripts: the CSP is `script-src 'none'`. Dark mode follows the OS
- * through @bundu/ui's color-scheme.css.
+ * No scripts and no inline styles: the CSP is `script-src 'none'` and
+ * `style-src 'self'`. Dark mode follows the OS through @bundu/ui's
+ * color-scheme.css.
  */
 import "@fontsource/noto-sans/latin-400.css";
 import "@fontsource/noto-sans/latin-ext-400.css";
@@ -16,9 +19,9 @@ import "@fontsource/noto-sans/latin-ext-600.css";
 import "@fontsource/noto-serif/latin-700.css";
 import "@fontsource/noto-serif/latin-ext-700.css";
 import "../styles/global.css";
-import MineralStrip from "@bundu/ui/MineralStrip.astro";
-import SiteHeader from "../components/SiteHeader.astro";
-import SiteFooter from "../components/SiteFooter.astro";
+import DiscoverMeta from "@bundu/ui/discover/DiscoverMeta.astro";
+import DiscoverShell from "@bundu/ui/discover/DiscoverShell.astro";
+import Mark from "../components/Mark.astro";
 
 interface Props {
   title: string;
@@ -48,40 +51,67 @@ const {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <meta name="robots" content={robots} />
-    <link rel="canonical" href={canonical} />
+    <DiscoverMeta
+      title={title}
+      description={description}
+      canonical={canonical}
+      siteName="Mukoko Circles"
+      image={ogImage}
+      type={ogType}
+      robots={robots}
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#4B0082" />
     <meta name="color-scheme" content="light dark" />
-
-    <meta property="og:site_name" content="Mukoko Circles" />
-    <meta property="og:type" content={ogType} />
-    <meta property="og:url" content={canonical} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="en_GB" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
     <Fragment set:html={headExtra} />
   </head>
-  <body class="flex min-h-dvh flex-col">
-    <a
-      href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 btn-secondary"
-      >Skip to content</a
+  <body>
+    <DiscoverShell
+      homeLabel="mukoko circles, home"
+      nav={[
+        { label: "All circles", href: "/circles" },
+        { label: "Fediverse", href: "/fediverse" },
+        { label: "About", href: "/about" },
+      ]}
+      footerLinks={[
+        { label: "All circles", href: "/circles" },
+        { label: "Create a circle", href: "/create" },
+        { label: "Circles on the fediverse", href: "/fediverse" },
+        { label: "About Circles", href: "/about" },
+      ]}
+      footerNote="Part of the Bundu ecosystem, built by Nyuchi Africa."
     >
-    <MineralStrip />
-    <SiteHeader />
-    <main id="main" class="flex-1">
+      <Fragment slot="brand">
+        <Mark class="text-brand-accent" />
+        <span class="font-serif text-h5 font-bold tracking-tight"
+          >mukoko <span class="text-primary">circles</span></span
+        >
+      </Fragment>
+      <a slot="action" class="btn-primary h-11 px-5 text-body-sm" href="/create"
+        >Create a circle</a
+      >
       <slot />
-    </main>
-    <SiteFooter storeLinks={storeLinks} />
+      <Fragment slot="footer">
+        <div class="space-y-3">
+          <p class="inline-flex items-center gap-2 font-serif text-h5 font-bold">
+            <Mark size={22} class="text-brand-accent" />
+            mukoko circles
+          </p>
+          <p class="max-w-sm text-body-sm text-muted-foreground">
+            Communities on mukoko, Africa's privacy-first social super-app.
+            Circles live in the Mukoko app; this site is where you find them.
+          </p>
+        </div>
+        <div class="space-y-2 text-body-sm">
+          <p><a class="link" href="https://mukoko.com">mukoko.com</a></p>
+          <p class="flex flex-col gap-2 empty:hidden" set:html={storeLinks} />
+          <p>
+            <a class="link" href="https://github.com/mukoko-dev/mukoko-circles"
+              >Source code (MIT)</a
+            >
+          </p>
+        </div>
+      </Fragment>
+    </DiscoverShell>
   </body>
 </html>

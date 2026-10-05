@@ -106,6 +106,72 @@ describe("pages", () => {
     expect(html).not.toMatch(/<script(?![^>]*application\/ld\+json)/);
   });
 
+  it("is built from the Mzizi Discover Standard, with no inline styles", async () => {
+    const r = await get("/");
+    // No style attributes anywhere, so the CSP allows none.
+    expect(r.headers.get("content-security-policy")).not.toContain(
+      "unsafe-inline",
+    );
+    for (const path of [
+      "/",
+      "/circles",
+      "/categories/tech",
+      "/search?q=runs",
+      "/c/harare-runners",
+      "/about",
+      "/fediverse",
+    ]) {
+      const html = await (await get(path)).text();
+      expect(html, path).not.toMatch(/\sstyle=/);
+      expect(html, path).toContain('data-slot="discover-shell"');
+      expect(html, path).toContain('data-slot="discover-meta"');
+    }
+    const home = await (await get("/")).text();
+    for (const slot of [
+      "discover-hero",
+      "discover-search",
+      "discover-section",
+      "result-grid",
+      "discover-card",
+      "category-chips",
+      "category-chip",
+    ])
+      expect(home, slot).toContain(`data-slot="${slot}"`);
+    expect(home).toMatch(/data-variant="circle"/);
+    // The circle page is the Discover detail pattern.
+    const circle = await (await get("/c/harare-runners")).text();
+    for (const slot of [
+      "detail-hero",
+      "discover-breadcrumb",
+      "open-in-app",
+      "meta-list",
+    ])
+      expect(circle, slot).toContain(`data-slot="${slot}"`);
+    // One <h1>, the circle's name, and the breadcrumb ends on it.
+    expect(circle.match(/<h1[\s>]/g)).toHaveLength(1);
+    expect(circle).toMatch(
+      /<span aria-current="page"[^>]*>\s*Harare Runners\s*<\/span>/,
+    );
+  });
+
+  it("wears the Circles brand: tanzanite primary, terracotta accent", async () => {
+    const html = await (await get("/")).text();
+    const href = html.match(/<link rel="stylesheet" href="([^"]+\.css)"/)?.[1];
+    expect(href).toBeTruthy();
+    const css = await (await get(href!)).text();
+    expect(css).toMatch(/--primary:\s*var\(--color-tanzanite\)/);
+    expect(css).toMatch(/--brand-accent:\s*var\(--color-terracotta\)/);
+  });
+
+  it("a card shows the circle's image when the API sends one, else its monogram", async () => {
+    const html = await (await get("/categories/tech")).text();
+    expect(html).toContain(
+      'src="https://assets.mukoko.com/circles/lagos-design-guild.png"',
+    );
+    expect(html).toContain('data-slot="discover-card-initial"');
+    expect(html).not.toMatch(/<img[^>]*\ssrc=""/);
+  });
+
   it("escapes what the API sends", async () => {
     const html = await (await get("/c/kwaito-forever")).text();
     expect(html).toContain("Kwaito Forever &lt;3 &amp; &quot;friends&quot;");
@@ -118,9 +184,10 @@ describe("pages", () => {
     expect(r.status).toBe(200);
     const html = await r.text();
     noPlaceholders(html);
-    expect(html).toContain(
-      '<h1 class="font-serif text-h1 text-balance">Technology</h1>',
-    );
+    expect(html).toMatch(/<h1 [^>]*>Technology<\/h1>/);
+    // Its own chip is the current one; no other is.
+    expect(html).toMatch(/href="\/categories\/tech" aria-current="page"/);
+    expect(html.match(/<a [^>]*aria-current="page"/g)).toHaveLength(1);
     expect(html).toContain("Nairobi JS");
     expect(html).not.toContain("Harare Runners");
     expect((await get("/categories/no-such-thing")).status).toBe(404);
@@ -139,7 +206,8 @@ describe("pages", () => {
   it("all circles paginates with a cursor", async () => {
     const html = await (await get("/circles")).text();
     expect(html).toContain("9 circles");
-    expect(html).not.toContain('rel="next"');
+    // Everything fits on one page: the Mzizi LoadMore is at its end.
+    expect(html).toMatch(/data-slot="load-more" data-state="end"/);
   });
 
   it("a circle page has OG tags, the actor link and public posts", async () => {

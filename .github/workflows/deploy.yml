@@ -1,0 +1,73 @@
+# Deploys the mukoko-circles Worker with the org's Cloudflare secrets.
+#
+# - push to `main`: `wrangler deploy`, production (circles.mukoko.com).
+# - push to `staging`: `wrangler versions upload --preview-alias beta`, a
+#   version that serves no production traffic, at the Worker's preview URL
+#   https://beta-mukoko-circles.<account subdomain>.workers.dev. That is the
+#   beta. It uses the production API (betas share production bindings).
+#
+# The FIRST deploy of a Worker is the owner's, by hand (it creates the Worker
+# and attaches the circles.mukoko.com custom domain). Until the Worker exists
+# both jobs skip with a notice instead of creating it from CI.
+name: Deploy
+
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ${{ github.ref_name == 'main' && 'production' || 'beta preview' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.repository == 'mukoko-dev/mukoko-circles'
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: worker
+      - name: Install
+        run: npm ci
+      - name: Does the Worker exist yet?
+        id: exists
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::notice::No CLOUDFLARE_API_TOKEN; nothing to deploy."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          elif npx wrangler deployments list --name mukoko-circles >/dev/null 2>&1; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::The mukoko-circles Worker does not exist yet. The first deploy is the owner's (npm run deploy); see issue #8."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build
+        if: steps.exists.outputs.ok == 'true'
+        run: npm run build
+      - name: Deploy production
+        if: steps.exists.outputs.ok == 'true' && github.ref_name == 'main'
+        run: npx wrangler deploy
+      - name: Upload the beta preview
+        if: steps.exists.outputs.ok == 'true' && github.ref_name != 'main'
+        run: |
+          npx wrangler versions upload --preview-alias beta \
+            --message "staging ${GITHUB_SHA::7}"

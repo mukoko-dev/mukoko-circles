@@ -69,7 +69,7 @@ pub fn circle_content(cfg: &Config, c: &Circle) -> Content {
         headline: truncate(&c.name, 60),
         sub: Some(truncate(&c.summary(), 120)),
         points,
-        cta: Some(format!("{}/c/{}", cfg.host, c.slug)),
+        cta: Some(format!("{}/c/{}", cfg.host, c.key())),
         ..Content::default()
     }
 }

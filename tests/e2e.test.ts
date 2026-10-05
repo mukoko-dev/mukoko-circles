@@ -181,7 +181,12 @@ describe("pages", () => {
 
   it("unknown circles and shells 404", async () => {
     expect((await get("/c/no-such-circle")).status).toBe(404);
-    expect((await get("/c/Not_A_Slug")).status).toBe(404);
+    // Paths are lower-case: the wrong case is redirected first.
+    const r = await get("/c/Not_A_Slug");
+    expect(r.status).toBe(301);
+    expect(r.headers.get("location")).toBe(`${SITE}/c/not_a_slug`);
+    expect((await get("/c/not_a_slug")).status).toBe(404);
+    expect((await get("/c/not.a.slug")).status).toBe(404);
     expect((await get("/tpl/home.html")).status).toBe(404);
   });
 
@@ -195,9 +200,82 @@ describe("pages", () => {
   });
 });
 
+describe("handles", () => {
+  // nairobi-js: handle NairobiJS, first claimed as nbo_js (retired), so its
+  // stored actor id is /c/nbo_js.
+  it("the current handle is the page", async () => {
+    const r = await get("/c/nairobijs");
+    expect(r.status).toBe(200);
+    const html = await r.text();
+    noPlaceholders(html);
+    expect(html).toContain("@NairobiJS@circles.mukoko.com");
+    expect(html).toContain(`<link rel="canonical" href="${SITE}/c/nairobijs">`);
+    expect(html).toContain(
+      `<link rel="alternate" type="application/activity+json" href="${SITE}/c/nbo_js">`,
+    );
+  });
+
+  it("the slug, a retired handle and the wrong case redirect to it", async () => {
+    for (const path of ["/c/nairobi-js", "/c/nbo_js"]) {
+      const r = await get(path);
+      expect(r.status).toBe(301);
+      expect(r.headers.get("location")).toBe(`${SITE}/c/nairobijs`);
+    }
+    const r = await get("/c/NairobiJS");
+    expect(r.status).toBe(301);
+    expect(r.headers.get("location")).toBe(`${SITE}/c/nairobijs`);
+  });
+
+  it("every name serves the same actor, with the stored id", async () => {
+    for (const path of ["/c/nairobijs", "/c/nairobi-js", "/c/nbo_js"]) {
+      const r = await get(path, AP);
+      expect(r.status).toBe(200);
+      const a = await r.json();
+      expect(a.id).toBe(`${SITE}/c/nbo_js`);
+      expect(a.preferredUsername).toBe("NairobiJS");
+      expect(a.url).toBe(`${SITE}/c/nairobijs`);
+      expect(a.outbox).toBe(`${SITE}/c/nbo_js/outbox`);
+    }
+    const o = await (await get("/c/nbo_js/outbox")).json();
+    expect(o.id).toBe(`${SITE}/c/nbo_js/outbox`);
+  });
+
+  it("WebFinger on a retired handle answers with the current one", async () => {
+    for (const name of ["NairobiJS", "nbo_js", "nairobi-js"]) {
+      const r = await get(
+        `/.well-known/webfinger?resource=acct:${name}@circles.mukoko.com`,
+      );
+      expect(r.status).toBe(200);
+      const j = await r.json();
+      expect(j.subject).toBe("acct:NairobiJS@circles.mukoko.com");
+      expect(j.links[0].href).toBe(`${SITE}/c/nbo_js`);
+    }
+  });
+});
+
 describe("buttons", () => {
-  it("join redirects into the super app", async () => {
-    const r = await get("/c/harare-runners/join");
+  const IPHONE =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+  const MAC =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36";
+  const join = (path: string, ua: string) =>
+    fetch(BASE + path, { redirect: "manual", headers: { "user-agent": ua } });
+
+  it("join sends a phone to the Mukoko link", async () => {
+    const r = await join("/c/harare-runners/join", IPHONE);
+    expect(r.status).toBe(302);
+    expect(r.headers.get("location")).toBe(
+      "https://mukoko.com/open/circles/harare-runners",
+    );
+    expect(r.headers.get("cache-control")).toBe("private, no-store");
+    const h = await join("/c/nbo_js/join", IPHONE);
+    expect(h.headers.get("location")).toBe(
+      "https://mukoko.com/open/circles/nairobijs",
+    );
+  });
+
+  it("join sends a desktop to the circle in the web app", async () => {
+    const r = await join("/c/harare-runners/join", MAC);
     expect(r.status).toBe(302);
     expect(r.headers.get("location")).toBe(
       "https://events.mukoko.com/circles/0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0001",

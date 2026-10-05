@@ -46,9 +46,11 @@ The interest categories (`engagement.interestCategories`) with at least one disc
 { "data": [{ "slug": "sport", "name": "Sport and fitness", "description": "…", "circleCount": 12 }] }
 ```
 
-### `GET /v1/circles/discover/{slug}`
+### `GET /v1/circles/discover/{key}`
 
-Returns one `Circle`, or 404 when no discoverable circle has that slug.
+Returns one `Circle`, or 404 when no discoverable circle answers to `key`. A circle answers to its slug, its current handle and its retired handles, compared case-insensitively. The Worker then checks the answer itself (`Circle::answers_to`): a circle that does not list the requested name as its handle, slug or one of its `aliases` is a 404.
+
+The Worker calls the posts routes below with the circle's **slug**, the permanent key, whatever name the request used.
 
 ### `GET /v1/circles/discover/{slug}/posts`
 
@@ -68,25 +70,27 @@ Returns one `Post`, or 404. A post is only ever served when it is `approved` and
 
 `Circle`:
 
-| Field         | Type                        | Notes                                                                                                                                                                        |
-| ------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`          | string                      | The circle id (UUID).                                                                                                                                                        |
-| `slug`        | string                      | `^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$`. Also the WebFinger name. Unique.                                                                                                   |
-| `name`        | string                      |                                                                                                                                                                              |
-| `description` | string or null              | Plain text.                                                                                                                                                                  |
-| `circleType`  | `"public"` or `"broadcast"` |                                                                                                                                                                              |
-| `memberCount` | number                      |                                                                                                                                                                              |
-| `postCount`   | number                      | Public posts: `approved` with `visibility: public`.                                                                                                                          |
-| `inLanguage`  | string or null              | BCP 47 language tag.                                                                                                                                                         |
-| `categories`  | `[{ slug, name }]`          |                                                                                                                                                                              |
-| `imageUrl`    | https URL or null           | The API sends only https.                                                                                                                                                    |
-| `featured`    | boolean                     | Set by platform staff (`POST /v1/admin/circles/{id}/feature`).                                                                                                               |
-| `createdAt`   | ISO 8601 (UTC, `Z`)         |                                                                                                                                                                              |
-| `updatedAt`   | ISO 8601 (UTC, `Z`)         | Keys the Open Graph image cache.                                                                                                                                             |
-| `place`       | `{ name }` or null          |                                                                                                                                                                              |
-| `actorUri`    | URL                         | `https://circles.mukoko.com/c/{slug}`. The API records it; the Worker always mints this itself.                                                                              |
-| `links.join`  | https URL                   | The link that opens the circle in the app. Today `https://events.mukoko.com/circles/{id}`; the super app's universal link `https://mukoko.com/circles/{slug}` when it ships. |
-| `links.app`   | `mukoko://…` or null        | The custom-scheme deep link. Null until the super app ships.                                                                                                                 |
+| Field         | Type                        | Notes                                                                                                                                                                     |
+| ------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | string                      | The circle id (UUID).                                                                                                                                                     |
+| `slug`        | string                      | `^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$`. Permanent and unique. The address until the circle has a handle.                                                                |
+| `handle`      | string or null              | The circle's current Mukoko handle (the one namespace, 3 to 30 of `A-Za-z0-9_`, in the case its admins chose). The address: `/c/{handle lower-cased}`, `acct:{handle}@…`. |
+| `aliases`     | string[]                    | The other names it answers to: retired handles and, once it has a handle, its slug. Requested on HTML, they 301 to the current address.                                   |
+| `name`        | string                      |                                                                                                                                                                           |
+| `description` | string or null              | Plain text.                                                                                                                                                               |
+| `circleType`  | `"public"` or `"broadcast"` |                                                                                                                                                                           |
+| `memberCount` | number                      |                                                                                                                                                                           |
+| `postCount`   | number                      | Public posts: `approved` with `visibility: public`.                                                                                                                       |
+| `inLanguage`  | string or null              | BCP 47 language tag.                                                                                                                                                      |
+| `categories`  | `[{ slug, name }]`          |                                                                                                                                                                           |
+| `imageUrl`    | https URL or null           | The API sends only https.                                                                                                                                                 |
+| `featured`    | boolean                     | Set by platform staff (`POST /v1/admin/circles/{id}/feature`).                                                                                                            |
+| `createdAt`   | ISO 8601 (UTC, `Z`)         |                                                                                                                                                                           |
+| `updatedAt`   | ISO 8601 (UTC, `Z`)         | Keys the Open Graph image cache.                                                                                                                                          |
+| `place`       | `{ name }` or null          |                                                                                                                                                                           |
+| `actorUri`    | URL                         | Stored once, from the circle's first address, and never rewritten. The Worker uses it as the actor id when it is a `/c/{key}` URL on this site, else derives one.         |
+| `links.join`  | https URL                   | Informational. The Worker no longer routes on it: "Join" follows the Mukoko link rules below.                                                                             |
+| `links.app`   | `mukoko://…` or null        | The custom-scheme deep link. Null until the super app ships.                                                                                                              |
 
 `Post`:
 
@@ -101,14 +105,25 @@ Returns one `Post`, or 404. A post is only ever served when it is `approved` and
 
 Every optional field may be missing. The Worker defaults it rather than failing the page.
 
+## Handles and stable actor ids
+
+Owner decision, 2026-10-05: circles are addressed by **Mukoko handle**, as entities are on kweli.mukoko.com (nyuchi/api-gateway `docs/architecture/activitypub.md`, "Handles are the identity" and "Stability").
+
+- The page is `/c/{handle}`, lower-cased; a path in another case 301s to it. `preferredUsername` and the `acct:` keep the case the admins chose.
+- The actor `id`, `inbox`, `outbox` and every `Note` id hang off the **stored** `actorUri`. `url` and `preferredUsername` follow the current handle. After a rename they differ, and that is what keeps followers and stored objects working.
+- A retired handle or the slug: a browser gets a 301 to `/c/{current}`; an ActivityPub request gets the actor with its stored id; WebFinger answers with the current `subject` and the stored id as `self`.
+- Until the API sends `handle`, the slug is the address, and nothing changes for existing circles.
+
+The API side (circle handles in the one registry, `handle` and `aliases` on the discovery shape, resolution by retired handle) is [nyuchi/api-gateway#231](https://github.com/nyuchi/api-gateway/issues/231).
+
 ## Deep links
 
-"Join" goes to `https://circles.mukoko.com/c/{slug}/join`. That page redirects (302) to the first of these that is safe:
+"Join" goes to `https://circles.mukoko.com/c/{key}/join`, which redirects (302, `private, no-store`) by device:
 
-1. `links.join` from the API, when it is an https URL.
-2. `JOIN_URL_TEMPLATE` (a Worker var) with `{id}` and `{slug}` filled in. Today that is `https://events.mukoko.com/circles/{id}`, because Circles lives inside Mukoko Events until the super app ships.
+1. **A phone or tablet** goes to the Mukoko link, `JOIN_URL_TEMPLATE` = `https://mukoko.com/open/circles/{handle}`. That page offers the Mukoko app (or its store listing).
+2. **Anything else** goes to the circle in the web super app, `WEB_JOIN_URL_TEMPLATE`. Today that is `https://events.mukoko.com/circles/{id}`, because Circles lives inside Mukoko Events until the super app ships. A desktop never goes through `/open`: `/open` sends desktops to the public page, which is this site.
 3. `APP_WEB_URL`, when the directory is unreachable.
 
-"Create a circle" goes to `/create`, which redirects to `CREATE_URL`. Today that is a placeholder, `https://events.mukoko.com/circles?create=1`: Mukoko Events has no create-circle page yet ([mukoko-dev/mukoko-events#159](https://github.com/mukoko-dev/mukoko-events/issues/159) builds one on `POST /v1/circles`). When the super app ships, it becomes `https://mukoko.com/circles/new`.
+Templates take `{id}`, `{slug}` and `{handle}` (the circle's path key).
 
-An https universal link is the "smart" part of the fallback. When the Mukoko app is installed and claims the domain, the operating system opens the app; otherwise the browser opens the web app. App Store and Google Play links appear in the footer once `APP_STORE_URL` and `PLAY_STORE_URL` are set.
+"Create a circle" goes to `/create`, which redirects to `CREATE_URL`. Today that is a placeholder, `https://events.mukoko.com/circles?create=1`: Mukoko Events has no create-circle page yet ([mukoko-dev/mukoko-events#159](https://github.com/mukoko-dev/mukoko-events/issues/159) builds one on `POST /v1/circles`). `/open` has no "new circle" link, so this stays a web URL.

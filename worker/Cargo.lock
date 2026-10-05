@@ -540,11 +540,22 @@ name = "mukoko-circles-worker"
 version = "0.1.0"
 dependencies = [
  "futures-util",
+ "mzizi-activitypub",
  "nyuchi-imaging",
  "serde",
  "serde_json",
  "url",
  "worker",
+]
+
+[[package]]
+name = "mzizi-activitypub"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a0fe97531f9a7564f22163a4d5544cef99263932006f1fc483a75b808b6c8a4"
+dependencies = [
+ "serde_json",
+ "url",
 ]
 
 [[package]]

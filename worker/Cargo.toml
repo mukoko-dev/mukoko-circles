@@ -14,6 +14,9 @@ crate-type = ["cdylib", "rlib"]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 url = "2"
+# The shared ActivityPub documents (decision Q5, mukoko-dev/kweli#171), from
+# the Mzizi registry's Rust workspace (mzizi-dev/mzizi-registry#421).
+mzizi-activitypub = "0.1"
 # The nyuchi-tools image pipeline (resvg, embedded Noto faces), pinned to a
 # commit. It renders each circle's Open Graph card: one renderer for the
 # estate rather than a second copy here.

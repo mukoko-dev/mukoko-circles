@@ -228,14 +228,14 @@ pub fn card(t: &Templates, cfg: &Config, c: &Circle) -> String {
         &t.card,
         &Vars::new()
             .text("name", c.name.clone())
-            .text("href", format!("/c/{}", c.slug))
+            .text("href", format!("/c/{}", c.key()))
             .text("summary", truncate(&c.summary(), 140))
             .text("members", count(c.member_count, "member", "members"))
             .text("type_label", label)
             .text("type_class", class)
             .text("initial", initial(&c.name))
             .text("categories", cats)
-            .text("handle", format!("@{}@{}", c.slug, cfg.host)),
+            .text("handle", format!("@{}@{}", c.username(), cfg.host)),
     )
 }
 
@@ -298,7 +298,7 @@ pub fn home(
     let example = featured
         .first()
         .or(latest.data.first())
-        .map(|c| c.slug.clone())
+        .map(|c| c.username())
         .unwrap_or_else(|| "harare-runners".into());
     let total = latest.total.unwrap_or(latest.data.len() as u64);
     let vars = base_vars(
@@ -387,7 +387,7 @@ pub fn list(t: &Templates, cfg: &Config, p: ListPage) -> String {
         "mainEntity": {
             "@type": "ItemList",
             "itemListElement": p.page.data.iter().enumerate().map(|(i, c)| json!({
-                "@type": "ListItem", "position": i + 1, "url": cfg.circle_actor(c), "name": c.name
+                "@type": "ListItem", "position": i + 1, "url": cfg.circle_url(c), "name": c.name
             })).collect::<Vec<_>>()
         }
     }));
@@ -447,6 +447,7 @@ pub fn post(t: &Templates, cfg: &Config, c: &Circle, p: &Post) -> String {
 pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>>) -> String {
     let (label, class, hint) = type_label(c);
     let actor = cfg.circle_actor(c);
+    let page = cfg.circle_url(c);
     let summary = c.summary();
     let cats: String = c
         .categories
@@ -462,7 +463,7 @@ pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>
         "additionalType": "https://www.w3.org/ns/activitystreams#Group",
         "name": c.name,
         "description": summary,
-        "url": actor,
+        "url": page,
         "parentOrganization": {"@type": "Organization", "name": "Mukoko", "url": "https://mukoko.com"},
     });
     if let Some(img) = c
@@ -476,11 +477,11 @@ pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>
         site_jsonld(cfg),
         json!({"@type":"BreadcrumbList","itemListElement":[
             {"@type":"ListItem","position":1,"name":"Circles","item":format!("{}/", cfg.site_url)},
-            {"@type":"ListItem","position":2,"name":c.name,"item":actor}
+            {"@type":"ListItem","position":2,"name":c.name,"item":page}
         ]}),
         json!({
             "@type": "WebPage",
-            "url": actor,
+            "url": page,
             "name": c.name,
             "description": summary,
             "isPartOf": {"@id": format!("{}/#website", cfg.site_url)},
@@ -502,15 +503,15 @@ pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>
         Head {
             title: format!("{} · Mukoko Circles", c.name),
             description: truncate(&summary, 160),
-            path: &format!("/c/{}", c.slug),
-            og_image: format!("{}/og/{}.png", cfg.site_url, c.slug),
+            path: &format!("/c/{}", c.key()),
+            og_image: format!("{}/og/{}.png", cfg.site_url, c.key()),
             og_type: "profile",
             noindex: false,
             extra_head: extra,
         },
     )
     .text("name", c.name.clone())
-    .text("slug", c.slug.clone())
+    .text("slug", c.key())
     .text("summary", summary)
     .text("type_label", label)
     .text("type_class", class)
@@ -541,9 +542,9 @@ pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>
             .map(|d| format!("Since {d}"))
             .unwrap_or_default(),
     )
-    .text("join_href", format!("/c/{}/join", c.slug))
+    .text("join_href", format!("/c/{}/join", c.key()))
     .text("join_label", join_label)
-    .text("handle", format!("@{}@{}", c.slug, cfg.host))
+    .text("handle", format!("@{}@{}", c.username(), cfg.host))
     .text("actor", actor)
     .html("categories", cats)
     .text(

@@ -1,7 +1,7 @@
 //! Which handler a request goes to. Pure, so the whole URL space is tested
 //! natively.
 
-use crate::model::{is_valid_id, is_valid_slug};
+use crate::model::{is_valid_id, is_valid_key, is_valid_slug};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Route {
@@ -17,7 +17,13 @@ pub enum Route {
         q: String,
         cursor: Option<String>,
     },
-    /// HTML or the ActivityPub actor, by `Accept`.
+    /// A circle path in the wrong case: handles keep the case their admins
+    /// chose in `preferredUsername`, but paths are lower-case. 301 here.
+    Lowercase {
+        location: String,
+    },
+    /// HTML or the ActivityPub actor, by `Accept`. `slug` is the requested
+    /// key: the circle's handle (lower-cased), its slug, or an alias.
     Circle {
         slug: String,
     },
@@ -70,6 +76,25 @@ fn cursor(q: &str) -> Option<String> {
 }
 
 pub fn route(path: &str, q: &str) -> Route {
+    // `/c/HarareRunners` → `/c/hararerunners` (and the same under /og/).
+    if (path.starts_with("/c/") || path.starts_with("/og/"))
+        && path.bytes().any(|b| b.is_ascii_uppercase())
+    {
+        let lower = path.to_ascii_lowercase();
+        return match route(&lower, q) {
+            Route::NotFound | Route::Asset | Route::Hidden => Route::NotFound,
+            _ => {
+                let q = q.trim_start_matches('?');
+                Route::Lowercase {
+                    location: if q.is_empty() {
+                        lower
+                    } else {
+                        format!("{lower}?{q}")
+                    },
+                }
+            }
+        };
+    }
     let segs: Vec<&str> = path.trim_start_matches('/').split('/').collect();
     match segs.as_slice() {
         [""] => Route::Home,
@@ -81,10 +106,11 @@ pub fn route(path: &str, q: &str) -> Route {
             cursor: cursor(q),
         },
         ["create"] => Route::Create,
-        ["categories", slug] => valid(slug, |slug| Route::Category {
-            slug,
+        ["categories", slug] if is_valid_slug(slug) => Route::Category {
+            slug: slug.to_string(),
             cursor: cursor(q),
-        }),
+        },
+        ["categories", _] => Route::NotFound,
         ["c", slug] => valid(slug, |slug| Route::Circle { slug }),
         ["c", slug, "join"] => valid(slug, |slug| Route::Join { slug }),
         ["c", slug, "outbox"] => valid(slug, |slug| Route::Outbox {
@@ -117,7 +143,7 @@ pub fn route(path: &str, q: &str) -> Route {
 }
 
 fn valid(slug: &str, f: impl FnOnce(String) -> Route) -> Route {
-    if is_valid_slug(slug) {
+    if is_valid_key(slug) {
         f(slug.to_string())
     } else {
         Route::NotFound
@@ -157,7 +183,27 @@ mod tests {
                 slug: "harare-runners".into()
             }
         );
-        assert_eq!(route("/c/Harare", ""), Route::NotFound);
+        assert_eq!(
+            route("/c/Harare", ""),
+            Route::Lowercase {
+                location: "/c/harare".into()
+            }
+        );
+        assert_eq!(
+            route("/c/HarareRunners/outbox", "page=true"),
+            Route::Lowercase {
+                location: "/c/hararerunners/outbox?page=true".into()
+            }
+        );
+        assert_eq!(
+            route("/c/harare_runners", ""),
+            Route::Circle {
+                slug: "harare_runners".into()
+            }
+        );
+        assert_eq!(route("/c/Bad.Name", ""), Route::NotFound);
+        assert_eq!(route("/c/-a", ""), Route::NotFound);
+        assert_eq!(route("/categories/a_b", ""), Route::NotFound);
         assert_eq!(route("/c/a/join", ""), Route::Join { slug: "a".into() });
         assert_eq!(
             route("/c/a/outbox", "page=true&cursor=x"),

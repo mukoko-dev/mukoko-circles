@@ -122,6 +122,8 @@
     {
       "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0006",
       "slug": "nairobi-js",
+      "handle": "NairobiJS",
+      "aliases": ["nairobi-js", "nbo_js"],
       "name": "Nairobi JS",
       "description": "JavaScript, TypeScript and the web platform. Monthly meetups at the iHub, talks posted here.",
       "circleType": "public",
@@ -132,7 +134,8 @@
       "featured": false,
       "createdAt": "2026-04-10T15:00:00Z",
       "updatedAt": "2026-09-20T15:00:00Z",
-      "place": { "name": "Nairobi" }
+      "place": { "name": "Nairobi" },
+      "actorUri": "https://circles.mukoko.com/c/nbo_js"
     },
     {
       "id": "0b8f6a52-1d0e-4c55-9a51-5f0d1c1a0007",

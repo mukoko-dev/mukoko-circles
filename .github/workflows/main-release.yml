@@ -6,7 +6,9 @@
 # Gated on CI: it runs after the `rust` workflow COMPLETES on `main` and only
 # tags when it succeeded, so a red `main` gets no version. The version lives
 # in tags only: nothing is committed back to `main`. The tag and release are
-# pushed with the org's RELEASE_BUMP_TOKEN.
+# pushed with the run's GITHUB_TOKEN, as the org's staging release does: the
+# org RELEASE_BUMP_TOKEN cannot push to this repo (403), and nothing here
+# listens for tag pushes, so a tag that starts no workflow is what we want.
 name: Main release
 
 on:
@@ -38,6 +40,8 @@ jobs:
        github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -54,7 +58,7 @@ jobs:
 
       - name: Push the tag and release
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_BUMP_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG: ${{ steps.v.outputs.tag }}
         run: |

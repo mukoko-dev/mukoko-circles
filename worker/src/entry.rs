@@ -15,7 +15,7 @@ use serde::de::DeserializeOwned;
 use std::cell::RefCell;
 use worker::*;
 
-const CSP: &str = "default-src 'self'; img-src 'self' https: data:; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
+const CSP: &str = "default-src 'self'; img-src 'self' https: data:; style-src 'self'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
 
 thread_local! {
     /// The shells, read once per isolate. They only change with a deploy,
@@ -110,7 +110,7 @@ async fn templates(env: &Env, origin: &str) -> Result<Templates> {
         return Ok(t);
     }
     let assets = env.assets("ASSETS")?;
-    let mut files: [String; 7] = Default::default();
+    let mut files: [String; 8] = Default::default();
     for (i, path) in Templates::PATHS.iter().enumerate() {
         let mut r = assets.fetch(format!("{origin}{path}"), None).await?;
         if r.status_code() != 200 {
@@ -480,6 +480,7 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
                     // Later pages are reachable from the first and the sitemap.
                     noindex: cursor.is_some(),
                     breadcrumb: Some(("All circles", "/circles")),
+                    current_category: None,
                 }),
                 200,
                 "public, max-age=60",
@@ -538,6 +539,7 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
                         categories: &cats,
                         noindex: cursor.is_some(),
                         breadcrumb: Some((&name, &path)),
+                        current_category: Some(slug.as_str()),
                     },
                 ),
                 200,
@@ -579,6 +581,7 @@ async fn fetch(req: Request, env: Env, wctx: Context) -> Result<Response> {
                         categories: &cats,
                         noindex: true,
                         breadcrumb: None,
+                        current_category: None,
                     },
                 ),
                 200,

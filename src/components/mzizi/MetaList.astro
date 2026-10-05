@@ -1,14 +1,13 @@
 ---
 /**
  * TODO(mzizi): https://github.com/mzizi-dev/mzizi-registry/pull/450
- * @bundu/ui 0.3.0 on npm does not ship the Discover detail pattern
- * (mzizi-dev/mzizi-registry#429 / #430; on mzizi-dev/packages-npm `staging`,
- * unreleased), and its MetaList 1.0.0 is not a valid <dl> (axe
- * definition-list / dlitem). This is the registry's
- * `discover-meta-list.astro` with the fix in #450 (contract 1.1.0): each row
- * is <div><dt><dd></div> with the icon in the <dt>, and a row with an empty
- * value hides itself. Imports use package paths. Delete this file and import
- * `@bundu/ui/discover/MetaList.astro` once a release with #450 is installed.
+ * @bundu/ui 0.4.0's MetaList (contract 1.0.0) is not a valid <dl>: each row
+ * is `dl > div > div > dt`, which axe reports as serious (definition-list,
+ * dlitem). This is the registry's `discover-meta-list.astro` with the fix in
+ * #450 (contract 1.1.0): each row is <div><dt><dd></div> with the icon in
+ * the <dt>, and a row with an empty value hides itself. Imports use package
+ * paths. Delete this file and import `@bundu/ui/discover/MetaList.astro`
+ * once a release with #450 is installed (mzizi-dev/packages-npm#48).
  */
 /**
  * MetaList — the facts of one item on its Discover page ("When", "Where",

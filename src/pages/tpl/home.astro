@@ -1,12 +1,16 @@
 ---
 /**
- * The home page shell. The Worker fills it from the Nyuchi API:
- * featured circles, the biggest circles, the categories and the count.
+ * The home page shell, on the Mzizi Discover Standard. The Worker fills it
+ * from the Nyuchi API: featured circles, the biggest circles, the
+ * categories and the count.
  */
 import Shell from "../../layouts/Shell.astro";
-import Section from "@bundu/ui/Section.astro";
-import SectionHeader from "@bundu/ui/SectionHeader.astro";
-import SearchForm from "../../components/SearchForm.astro";
+import DiscoverHero from "@bundu/ui/discover/DiscoverHero.astro";
+import DiscoverSearch from "@bundu/ui/discover/DiscoverSearch.astro";
+import DiscoverSection from "@bundu/ui/discover/DiscoverSection.astro";
+import ResultGrid from "@bundu/ui/discover/ResultGrid.astro";
+import CategoryChips from "@bundu/ui/discover/CategoryChips.astro";
+import EmptyState from "@bundu/ui/app/EmptyState.astro";
 ---
 
 <Shell
@@ -19,78 +23,79 @@ import SearchForm from "../../components/SearchForm.astro";
   headExtra="{{{head_extra}}}"
   storeLinks="{{{store_links}}}"
 >
-  <section class="gradient-showcase border-b border-border">
-    <div class="container-custom py-16 md:py-24">
-      <p class="eyebrow">Mukoko Circles</p>
-      <h1 class="font-serif text-h1 md:text-display text-balance max-w-4xl">
-        Find your people. Keep them close.
-      </h1>
-      <p class="mt-6 max-w-2xl text-body-lg text-muted-foreground text-pretty">
-        Circles are communities on mukoko, Africa's privacy-first social
-        super-app: running clubs, fan clubs, neighbourhood groups, professional
-        networks and everything in between. Browse the open ones here, then join
-        in the Mukoko app.
-      </p>
-      <div class="mt-8">
-        <SearchForm id="hero-search" />
-      </div>
-      <div class="mt-6 flex flex-wrap items-center gap-3">
+  <DiscoverHero
+    size="home"
+    eyebrow="Mukoko Circles"
+    title="Find your people. Keep them close."
+    lead="Circles are communities on mukoko, Africa's privacy-first social super-app: running clubs, fan clubs, neighbourhood groups, professional networks and everything in between. Browse the open ones here, then join in the Mukoko app."
+    count="{{total}} on Mukoko"
+  >
+    <DiscoverSearch
+      slot="search"
+      id="hero-search"
+      label="Search circles"
+      placeholder="Search circles: running, Shona, design…"
+    />
+    <Fragment slot="actions">
+      <a class="btn-primary" href="/create">Create a circle</a>
+      <a class="btn-outline" href="/circles">Browse all circles</a>
+    </Fragment>
+  </DiscoverHero>
+
+  <DiscoverSection
+    id="featured"
+    eyebrow="Featured"
+    title="Circles worth joining"
+    description="A few of the busiest open circles on Mukoko right now."
+  >
+    <ResultGrid label="Featured circles" state="{{featured_state}}">
+      <Fragment set:html="{{{featured}}}" />
+      <EmptyState
+        slot="empty"
+        title="No open circles yet."
+        level={3}
+        message="Be the first: start one for your people in the Mukoko app."
+      >
         <a class="btn-primary" href="/create">Create a circle</a>
-        <a class="btn-outline" href="/circles">Browse all circles</a>
-        <p class="text-body-sm text-muted-foreground">{"{{total}}"} on Mukoko</p>
-      </div>
-    </div>
-  </section>
+      </EmptyState>
+    </ResultGrid>
+  </DiscoverSection>
 
-  <Section space="default">
-    <SectionHeader
-      eyebrow="Featured"
-      title="Circles worth joining"
-      description="A few of the busiest open circles on Mukoko right now."
-    />
-    <div data-state="{{featured_state}}" class="mt-10">
-      <ul class="when-ok grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Fragment set:html="{{{featured}}}" />
-      </ul>
-      <div class="when-empty card p-8 text-center">
-        <p class="font-serif text-h4">No open circles yet.</p>
-        <p class="mt-2 text-muted-foreground">
-          Be the first: start one for your people in the Mukoko app.
-        </p>
-        <a class="btn-primary mt-6" href="/create">Create a circle</a>
-      </div>
-    </div>
-  </Section>
+  <DiscoverSection
+    id="browse"
+    eyebrow="Browse"
+    title="Find circles by what you love"
+    tone="muted"
+    space="tight"
+    state="{{categories_state}}"
+  >
+    <CategoryChips label="Categories">
+      <Fragment set:html="{{{categories}}}" />
+    </CategoryChips>
+  </DiscoverSection>
 
-  <Section bg="secondary" space="tight">
-    <div data-state="{{categories_state}}">
-      <div class="when-ok">
-        <SectionHeader eyebrow="Browse" title="Find circles by what you love" />
-        <ul class="mt-8 flex flex-wrap gap-3">
-          <Fragment set:html="{{{categories}}}" />
-        </ul>
-      </div>
-    </div>
-    <div data-state="{{latest_state}}" class="mt-14">
-      <div class="when-ok">
-        <SectionHeader eyebrow="Open circles" title="More circles to explore" />
-        <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Fragment set:html="{{{latest}}}" />
-        </ul>
-        <p class="mt-8">
-          <a class="btn-outline" href="/circles">See every circle</a>
-        </p>
-      </div>
-    </div>
-  </Section>
+  <DiscoverSection
+    id="latest"
+    eyebrow="Open circles"
+    title="More circles to explore"
+    tone="muted"
+    space="tight"
+    seeAllHref="/circles"
+    seeAllLabel="See every circle"
+    state="{{latest_state}}"
+  >
+    <ResultGrid label="Open circles">
+      <Fragment set:html="{{{latest}}}" />
+    </ResultGrid>
+  </DiscoverSection>
 
-  <Section>
-    <SectionHeader
-      eyebrow="How it works"
-      title="One home for your communities"
-      description="Circles live in the Mukoko super-app, alongside your events, messages and news. This site is the front door."
-    />
-    <ol class="mt-10 grid gap-4 md:grid-cols-3">
+  <DiscoverSection
+    id="how"
+    eyebrow="How it works"
+    title="One home for your communities"
+    description="Circles live in the Mukoko super-app, alongside your events, messages and news. This site is the front door."
+  >
+    <ol class="grid gap-4 md:grid-cols-3">
       <li class="card p-6">
         <p class="badge-premium">1</p>
         <h3 class="mt-4 font-sans text-h5 font-semibold">Find a circle</h3>
@@ -114,24 +119,21 @@ import SearchForm from "../../components/SearchForm.astro";
         </h3>
         <p class="mt-2 text-body-sm text-muted-foreground">
           Every open circle has an address, like{" "}
-          <span class="handle">{"{{example_handle}}"}</span>. Look it up from
-          Mastodon or any ActivityPub app.{" "}
+          <span class="font-mono break-all">{"{{example_handle}}"}</span>. Look
+          it up from Mastodon or any ActivityPub app.{" "}
           <a class="link" href="/fediverse">How it works</a>
         </p>
       </li>
     </ol>
-  </Section>
+  </DiscoverSection>
 
-  <Section bg="secondary" space="tight">
-    <div class="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
-      <div>
-        <h2 class="font-serif text-h2">Start a circle for your people</h2>
-        <p class="mt-2 max-w-xl text-muted-foreground">
-          Umuntu ngumuntu ngabantu: a person is a person through other people.
-          Bring yours together.
-        </p>
-      </div>
-      <a class="btn-primary" href="/create">Create a circle</a>
-    </div>
-  </Section>
+  <DiscoverSection
+    id="start"
+    title="Start a circle for your people"
+    description="Umuntu ngumuntu ngabantu: a person is a person through other people. Bring yours together."
+    tone="muted"
+    space="tight"
+    seeAllHref="/create"
+    seeAllLabel="Create a circle"
+  />
 </Shell>

@@ -33,7 +33,7 @@ request ─▶ Rust Worker (worker/, workers-rs) ─┬─▶ Nyuchi API  GET /v
 - **`worker/` (Rust).** Routes every request, calls the API, fills the shells (escaping everything, in one pass), and serves the ActivityPub, WebFinger and NodeInfo documents. Every module except `entry.rs` is plain Rust tested natively. `entry.rs` is the thin wasm I/O layer.
 - **Open Graph images** are drawn by the nyuchi-tools image pipeline (`nyuchi-imaging`, pinned by commit) in a Mukoko theme, and cached at the edge per circle and `updatedAt`.
 
-Brand: Mukoko tanzanite as primary (the super-app's mineral), with terracotta, Circles' own mineral in the Mzizi ecosystem table, as the accent. British English throughout.
+Brand: Mukoko tanzanite as primary (the super-app's mineral), with terracotta as the accent (`--brand-accent`), as the Mzizi canon `circles` row says (`brand-circles.css`). British English throughout.
 
 ## URLs
 

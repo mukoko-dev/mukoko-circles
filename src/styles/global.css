@@ -1,14 +1,18 @@
 /*
  * The design system, straight from the package: Mzizi tokens, the @bundu/ui
- * component classes, the OS colour scheme, and Mukoko's brand overlay
- * (tanzanite). Nothing here redefines a token; if a colour is wrong, it is
- * wrong in @bundu/ui and gets fixed there (the Mzizi registry rule).
+ * component classes, the OS colour scheme, and the Mukoko Circles brand
+ * overlay (tanzanite primary, terracotta --brand-accent; @bundu/ui 0.5.0's
+ * brand-circles.css). Nothing here redefines a token
+ * or a component: the pages are built from the Mzizi Discover Standard
+ * (@bundu/ui/discover/*). If
+ * something is missing or wrong, it is fixed in Mzizi, not here (the
+ * upstream-first rule, mzizi-dev/mzizi-registry CONTRIBUTING.md).
  */
 @import "tailwindcss";
 @import "@bundu/ui/styles/theme.css";
 @import "@bundu/ui/styles/globals.css";
 @import "@bundu/ui/styles/color-scheme.css";
-@import "@bundu/ui/styles/brand-mukoko.css";
+@import "@bundu/ui/styles/brand-circles.css";
 @source "../../node_modules/@bundu/ui/src";
 
 @layer base {
@@ -21,53 +25,4 @@
       scroll-behavior: auto !important;
     }
   }
-}
-
-@layer components {
-  /* Inline links: underlined at rest (WCAG 1.4.1, axe link-in-text-block). */
-  .link {
-    @apply text-foreground underline underline-offset-4 decoration-border
-           transition-colors hover:decoration-foreground;
-  }
-
-  /* A card whose heading link covers the whole card. */
-  .stretched::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-  }
-
-  .chip {
-    @apply inline-flex items-center gap-2 h-10 px-4 rounded-full border border-border
-           bg-card text-body-sm font-medium text-foreground
-           transition-colors hover:border-foreground;
-  }
-  .chip-count {
-    @apply text-caption text-muted-foreground;
-  }
-  .chip-count:empty {
-    display: none;
-  }
-
-  .avatar {
-    @apply inline-flex shrink-0 items-center justify-center rounded-full
-           bg-tanzanite-container text-tanzanite-on-container font-serif font-bold;
-  }
-
-  .handle {
-    @apply font-mono text-body-sm break-all;
-  }
-}
-
-/*
- * Conditional sections without client code: the Worker sets data-state to
- * "ok" or "empty", and CSS shows the matching block.
- */
-[data-state="empty"] .when-ok,
-[data-state="ok"] .when-empty {
-  display: none;
-}
-.empty-hide:empty {
-  display: none;
 }

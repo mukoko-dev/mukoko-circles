@@ -14,30 +14,33 @@ pub struct Templates {
     pub circle: String,
     pub message: String,
     pub card: String,
+    pub card_image: String,
     pub chip: String,
     pub post: String,
 }
 
 impl Templates {
-    pub const PATHS: [&'static str; 7] = [
+    pub const PATHS: [&'static str; 8] = [
         "/tpl/home.html",
         "/tpl/list.html",
         "/tpl/circle.html",
         "/tpl/message.html",
         "/tpl/card.html",
+        "/tpl/card-image.html",
         "/tpl/chip.html",
         "/tpl/post.html",
     ];
 
-    /// From the seven files, in [`Self::PATHS`] order.
-    pub fn from_files(files: [String; 7]) -> Self {
-        let [home, list, circle, message, card, chip, post] = files;
+    /// From the eight files, in [`Self::PATHS`] order.
+    pub fn from_files(files: [String; 8]) -> Self {
+        let [home, list, circle, message, card, card_image, chip, post] = files;
         Templates {
             home,
             list,
             circle,
             message,
             card: fragment(&card).to_string(),
+            card_image: fragment(&card_image).to_string(),
             chip: fragment(&chip).to_string(),
             post: fragment(&post).to_string(),
         }
@@ -197,16 +200,18 @@ pub fn day_month_year(iso: &str) -> Option<String> {
     Some(format!("{day} {my}"))
 }
 
-fn type_label(c: &Circle) -> (&'static str, &'static str, &'static str) {
+fn type_label(c: &Circle) -> (&'static str, &'static str) {
     if c.is_broadcast() {
-        (
-            "Broadcast",
-            "badge-accent",
-            "Hosts post, everyone can follow along.",
-        )
+        ("Broadcast", "Hosts post, everyone can follow along.")
     } else {
-        ("Public", "badge-premium", "Anyone can join and take part.")
+        ("Public", "Anyone can join and take part.")
     }
+}
+
+/// The Mzizi DiscoverCard badge tone for a circle's type: Public in the
+/// brand colour, Broadcast as information.
+fn type_tone(c: &Circle) -> &'static str {
+    if c.is_broadcast() { "info" } else { "brand" }
 }
 
 fn initial(name: &str) -> String {
@@ -217,7 +222,13 @@ fn initial(name: &str) -> String {
 }
 
 pub fn card(t: &Templates, cfg: &Config, c: &Circle) -> String {
-    let (label, class, _) = type_label(c);
+    let (label, _) = type_label(c);
+    // The circle's own image when the API sends a safe https one (the card
+    // with an image), else the monogram (the card without).
+    let image = c
+        .image_url
+        .as_deref()
+        .filter(|u| crate::config::is_safe_https(u));
     let cats = c
         .categories
         .iter()
@@ -225,14 +236,19 @@ pub fn card(t: &Templates, cfg: &Config, c: &Circle) -> String {
         .collect::<Vec<_>>()
         .join(" · ");
     fill(
-        &t.card,
+        if image.is_some() {
+            &t.card_image
+        } else {
+            &t.card
+        },
         &Vars::new()
             .text("name", c.name.clone())
+            .text("image", image.unwrap_or_default())
             .text("href", format!("/c/{}", c.key()))
             .text("summary", truncate(&c.summary(), 140))
             .text("members", count(c.member_count, "member", "members"))
             .text("type_label", label)
-            .text("type_class", class)
+            .text("type_tone", type_tone(c))
             .text("initial", initial(&c.name))
             .text("categories", cats)
             .text("handle", format!("@{}@{}", c.username(), cfg.host)),
@@ -243,20 +259,31 @@ pub fn cards(t: &Templates, cfg: &Config, circles: &[Circle]) -> String {
     circles.iter().map(|c| card(t, cfg, c)).collect()
 }
 
-pub fn chip(t: &Templates, slug: &str, name: &str, n: Option<u64>) -> String {
+/// One category link. `current` marks the category page it is on
+/// (`aria-current="page"` on the Mzizi CategoryChip).
+pub fn chip(t: &Templates, slug: &str, name: &str, n: Option<u64>, current: bool) -> String {
     fill(
         &t.chip,
         &Vars::new()
             .text("href", format!("/categories/{slug}"))
+            .text("current", if current { "page" } else { "false" })
             .text("name", name)
             .text("count", n.map(thousands).unwrap_or_default()),
     )
 }
 
-pub fn chips(t: &Templates, cats: &[Category]) -> String {
+pub fn chips(t: &Templates, cats: &[Category], current: Option<&str>) -> String {
     cats.iter()
         .filter(|c| crate::model::is_valid_slug(&c.slug))
-        .map(|c| chip(t, &c.slug, &c.name, Some(c.circle_count)))
+        .map(|c| {
+            chip(
+                t,
+                &c.slug,
+                &c.name,
+                Some(c.circle_count),
+                current == Some(c.slug.as_str()),
+            )
+        })
         .collect()
 }
 
@@ -315,7 +342,7 @@ pub fn home(
     )
     .html("featured", cards(t, cfg, featured))
     .html("latest", cards(t, cfg, &latest.data))
-    .html("categories", chips(t, categories))
+    .html("categories", chips(t, categories, None))
     .text("total", count(total, "open circle", "open circles"))
     .text("example_handle", format!("@{example}@{}", cfg.host))
     .text(
@@ -350,22 +377,23 @@ pub struct ListPage<'a> {
     pub categories: &'a [Category],
     pub noindex: bool,
     pub breadcrumb: Option<(&'a str, &'a str)>,
+    /// The category this list is (its chip is marked current).
+    pub current_category: Option<&'a str>,
 }
 
 pub fn list(t: &Templates, cfg: &Config, p: ListPage) -> String {
-    let next = p
+    // The next page for the Mzizi LoadMore in the shell: its URL, and
+    // "more" or "end". The shell escapes the URL; nothing here writes HTML.
+    let next_href = p
         .page
         .next_cursor
         .as_deref()
         .map(|cur| {
             let sep = if p.next_base.contains('?') { '&' } else { '?' };
-            format!(
-                r#"<a class="btn-outline" rel="next" href="{}{sep}cursor={}">More circles</a>"#,
-                escape(&p.next_base),
-                escape(&encode(cur))
-            )
+            format!("{}{sep}cursor={}", p.next_base, encode(cur))
         })
         .unwrap_or_default();
+    let more_state = if next_href.is_empty() { "end" } else { "more" };
     let shown = p.page.data.len() as u64;
     let results = match p.page.total {
         Some(n) => count(n, "circle", "circles"),
@@ -417,8 +445,9 @@ pub fn list(t: &Templates, cfg: &Config, p: ListPage) -> String {
         },
     )
     .html("cards", cards(t, cfg, &p.page.data))
-    .html("next", next)
-    .html("categories", chips(t, p.categories));
+    .text("next_href", next_href)
+    .text("more_state", more_state)
+    .html("categories", chips(t, p.categories, p.current_category));
     fill(&t.list, &vars)
 }
 
@@ -445,7 +474,7 @@ pub fn post(t: &Templates, cfg: &Config, c: &Circle, p: &Post) -> String {
 }
 
 pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>>) -> String {
-    let (label, class, hint) = type_label(c);
+    let (label, hint) = type_label(c);
     let actor = cfg.circle_actor(c);
     let page = cfg.circle_url(c);
     let summary = c.summary();
@@ -453,7 +482,7 @@ pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>
         .categories
         .iter()
         .filter(|x| crate::model::is_valid_slug(&x.slug))
-        .map(|x| chip(t, &x.slug, &x.name, None))
+        .map(|x| chip(t, &x.slug, &x.name, None, false))
         .collect();
     let posts_html: String = posts
         .map(|p| p.data.iter().take(5).map(|x| post(t, cfg, c, x)).collect())
@@ -514,7 +543,6 @@ pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>
     .text("slug", c.key())
     .text("summary", summary)
     .text("type_label", label)
-    .text("type_class", class)
     .text("type_hint", hint)
     .text("initial", initial(&c.name))
     .text("members", count(c.member_count, "member", "members"))
@@ -531,15 +559,10 @@ pub fn circle(t: &Templates, cfg: &Config, c: &Circle, posts: Option<&Page<Post>
         c.place.as_ref().map(|p| p.name.clone()).unwrap_or_default(),
     )
     .text(
-        "place_state",
-        if c.place.is_some() { "ok" } else { "empty" },
-    )
-    .text(
         "since",
         c.created_at
             .as_deref()
             .and_then(month_year)
-            .map(|d| format!("Since {d}"))
             .unwrap_or_default(),
     )
     .text("join_href", format!("/c/{}/join", c.key()))

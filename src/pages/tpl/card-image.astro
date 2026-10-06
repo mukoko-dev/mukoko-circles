@@ -1,8 +1,9 @@
 ---
 /**
- * One circle in a grid: the Mzizi DiscoverCard, `circle` variant. A
- * fragment: the Worker repeats it per circle and reads only what is between
- * the fragment markers.
+ * One circle in a grid, with its own image: the Mzizi DiscoverCard, `circle`
+ * variant. The Worker uses this fragment when the Nyuchi API sends a safe
+ * https `imageUrl`, and card.astro (the monogram) otherwise: a filled shell
+ * cannot leave out an `image` prop, and an empty `src` is not an image.
  */
 import DiscoverCard from "@bundu/ui/discover/DiscoverCard.astro";
 ---
@@ -12,7 +13,7 @@ import DiscoverCard from "@bundu/ui/discover/DiscoverCard.astro";
   variant="circle"
   href="{{href}}"
   title="{{name}}"
-  initial="{{initial}}"
+  image="{{image}}"
   badge="{{type_label}}"
   badgeTone="{{type_tone}}"
   summary="{{summary}}"

@@ -28,10 +28,9 @@ maintain consistency."
 - The one local component of our own is `src/components/Mark.astro`, the
   Circles logo: brand content for `DiscoverShell`'s `brand` slot, not a UI
   component.
-- Current `TODO(mzizi)` copies, tracked in mzizi-dev/packages-npm#48:
-  `src/components/mzizi/MetaList.astro` (@bundu/ui 0.4.0's MetaList is not a
-  valid `<dl>`; fix in mzizi-dev/mzizi-registry#450) and
-  `src/styles/brand-circles.css` (mzizi-dev/packages-npm#46).
+- No `TODO(mzizi)` copies are left: @bundu/ui 0.5.0 carries MetaList 1.1.0
+  (mzizi-dev/mzizi-registry#450) and `brand-circles.css`
+  (mzizi-dev/packages-npm#46).
 
 ## The circle page is the Discover detail pattern
 

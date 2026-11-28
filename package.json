@@ -30,7 +30,7 @@
     "axe-core": "^4.14.1",
     "playwright": "^1.65.1",
     "tailwindcss": "^4.3.5",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "vite-plus": "^1.7.0",
     "wrangler": "^4.166.0"
   },
